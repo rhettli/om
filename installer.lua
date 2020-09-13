@@ -125,8 +125,22 @@ function class_installer:install_plugs  ()
 
 end
 
-function class_installer:install(dir)
-    local package =require('package')
+function class_installer:install()
+    local cwm_path = env('CWM_PATH')
+    print('cwm_path:===', cwm_path)
+    local package = require('package')
+    for i, v in pairs(package.dependencies) do
+        local install_where = 'local'
+        local install_version = '*'
+        if str_index(v, '|') > -1 then
+            local sp = str_split(v, "|")
+            install_where = sp[2]
+            install_version = sp[1]
+        end
+        print('install dependencies:===', install_where, install_version)
+        require('api.package'):new():search(i,true)
+
+    end
 end
 
 return class_installer

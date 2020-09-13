@@ -12,8 +12,8 @@ return {
     -- ['package_name'] = 'version'
     -- version must like :* , 1.*, 2.3.*
     dependencies = {
-        ['oshine/cw_any_type'] = '*',
-        ['oshine/cw_args_capture'] = '*'
+        ['oshine/cw_any_type'] = '*|global',
+        ['oshine/cw_args_capture'] = '*|global'
     },
     -- platform default is all platform
     platform = 'all' or 'windows drawn linux',

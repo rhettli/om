@@ -24,7 +24,27 @@ function m:add(package_name, git_source)
 end
 
 function m:_install(data)
-    download('', '')
+    local install_where = env('CWM_PATH')
+    print(json_encode(data))
+    if not data[1] then
+        return
+    end
+    local git_source = data[1].git_source
+    local arr = str_index(git_source, ',')
+    if arr > -1 then
+        git_source = str_split(git_source, ',')
+    else
+        git_source = { git_source }
+    end
+    for i, v in pairs(git_source) do
+        local download_path = install_where .. '/' .. data.name .. '.zip'
+        local dr = download(v, download_path, function(r)
+            print(r)
+        end)
+        if dr then
+            un_compress(download_path)
+        end
+    end
 end
 
 function m:search(key, is_install)
