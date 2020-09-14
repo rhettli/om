@@ -11,7 +11,7 @@ if "%p1%"=="" (
     setx CWM_PATH %~dp0
 )
 
-if not exist %p1%cwm.bat (
+if not exist %p1%cwm.cmd (
     echo cwm install not correct repair
     setx CWM_PATH %~dp0
 )
@@ -49,8 +49,8 @@ echo %allparam%
 ::  echo -- cw login==    cwjit /cwm login
 ::  echo -- cw install==  cwjit /cwm install
 
-echo %CW_PATH%\cw.exe
+echo %CW_PATH%\cw.exe runner start
+
 if exist %CW_PATH%\cw.exe (
-    %CW_PATH%\cw.exe    /cw    %allparam%
-    exit
+    %CW_PATH%\cw.exe   %CWM_PATH%\..\cwm.lua  %allparam%
 )
