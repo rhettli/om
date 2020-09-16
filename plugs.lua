@@ -11,9 +11,8 @@ function class_plugs:new  (lib_name)
         --print(self._http:new())
     end
 
-    local conf = require('oshine.cwm.conf')
-
     self._lib_name = lib_name
+    local conf=require('oshine.cwm.conf')
 
     local current_dir = conf.install_dir .. str_replace(lib_name, '.', '/')
     print('want load lib:==', current_dir)
@@ -21,10 +20,11 @@ function class_plugs:new  (lib_name)
     self.plugs_yml = yml_parse(current_dir .. '/package.yml')
     print("plugs port:", self.plugs_yml.port)
 
-    require(lib_name .. '.init'):new(self.plugs_yml, current_dir)
-
     -- when init plugs,check plugs if is running
     self._port = self.plugs_yml.port
+
+    self._plugs = require(lib_name .. '.init')
+    self._plugs.run(self.plugs_yml, current_dir)
 
     local res, error_message = self._http.request("GET", 'http://127.0.0.1:' .. self._port .. '/ping', {})
     if error_message then

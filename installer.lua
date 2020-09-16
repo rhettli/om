@@ -1,8 +1,8 @@
 local dir = _DIR
 local work_dir = ''
-local yml = nil
+local yml
 local os = os()
-
+local install_dir
 local class_installer = {}
 
 function class_installer:new (work_dir_)
@@ -14,11 +14,14 @@ function class_installer:new (work_dir_)
     end
 
     print('start parse:', work_dir_ .. '/package.yml')
-    yml, err = yml_parse(work_dir_ .. '/package.yml')
+    yml, err = require(work_dir_ .. '/package')
+
     if err then
         print('parse fail,check syntax:', err)
         return
     end
+    local conf = require('oshine.cwm.conf')
+    install_dir = conf.install_dir
 
     print(json_encode({ l = 123, gg = 12 }))
     print("package parse done:==", json_encode(yml))
@@ -93,7 +96,7 @@ function class_installer:install_plugs  ()
             if not is_dir then
                 local real_file = str_split(str_replace(file, '\\', '/'), '/')
                 local name = str_split(real_file[#real_file], '.')[1]
-                local origin_name=name
+                local origin_name = name
                 if os == 'windows' then
                     -- windows mcd
                     if str_index(file, 'windows') > -1 then

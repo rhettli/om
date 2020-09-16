@@ -25,6 +25,8 @@ table.remove(args1, 1)
 print('CWM get real args:===', json_encode(args1))
 
 if args1[1] == 'login' then
+
+
 elseif args1[1] == 'logout' then
     print('login start with')
 
@@ -54,10 +56,26 @@ elseif args1[1] == 'cmd' then
         end
         r.run(p)
     end
-
 elseif args1[1] == 'status' then
+elseif args1[1] == 'package' then
+    if args1[2] == 'search' then
 
+    elseif args1[2] == 'status' then
 
+    end
+elseif args1[1] == 'search' then
+
+elseif args1[1] == 'plugs' then
+    if args1[2] == 'status' then
+    elseif args1[2] == 'search' then
+    elseif args1[2] == 'remote' then
+        local plugs = require('oshine.cwm.api.plugs'):new()
+        if args1[3] == 'recorder' then
+            plugs:recorder()
+        elseif args1[3] == 'add' then
+
+        end
+    end
 elseif in_array(args1[1], { '-h', '--help' }) then
     print('you may use like this')
 end
