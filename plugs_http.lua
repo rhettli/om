@@ -27,9 +27,9 @@ function class_http:headers   (headers)
 end
 
 -- this is post method
-function class_http:request   (...)
+function class_http:request   (path, ...)
     -- use http request to call plugs function
-    local result, error_message = self._http.request("POST", 'http://127.0.0.1:' .. self._port .. '/call', {
+    local result, error_message = self._http.request("POST", 'http://127.0.0.1:' .. self._port .. path, {
         body = json_encode({ ... }),
         headers = self._headers, -- { op = 123 }
         _cookies = self._cookies -- { op = 123 }
@@ -51,6 +51,10 @@ function class_http:request   (...)
     end
 
     return self
+end
+
+function class_http:call   (...)
+    return self:request('/call')
 end
 
 return class_http

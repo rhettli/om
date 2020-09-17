@@ -25,6 +25,8 @@ table.remove(args1, 1)
 print('CWM get real args:===', json_encode(args1))
 
 if args1[1] == 'login' then
+    local member = require('oshine.cwm.api.member'):new()
+    member:login(args1[2], args1[3])
 
 
 elseif args1[1] == 'logout' then
@@ -64,7 +66,12 @@ elseif args1[1] == 'package' then
 
     end
 elseif args1[1] == 'search' then
+elseif args1[1] == 'program' then
+    -- cwp program
+    if args1[2] == 'status' then
+    elseif args1[2] == 'search' then
 
+    end
 elseif args1[1] == 'plugs' then
     if args1[2] == 'status' then
     elseif args1[2] == 'search' then

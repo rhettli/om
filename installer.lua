@@ -8,18 +8,20 @@ local class_installer = {}
 function class_installer:new (work_dir_)
     work_dir = work_dir_
 
-    if not file_exist(work_dir_ .. '/package.yml') then
+    if not file_exist(work_dir_ .. '/package.lua') then
         out('package.yml lose,this not a correct package')
         return false
     end
 
     print('start parse:', work_dir_ .. '/package.yml')
-    yml, err = require(work_dir_ .. '/package')
+    local pStr = file_get_contents(work_dir_ .. '/package.lua')
 
-    if err then
+    if not pStr then
         print('parse fail,check syntax:', err)
         return
     end
+    yml = loadstring(pStr)()
+
     local conf = require('oshine.cwm.conf')
     install_dir = conf.install_dir
 
