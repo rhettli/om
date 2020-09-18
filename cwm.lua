@@ -23,25 +23,47 @@ local args1 = args()
 table.remove(args1, 1)
 
 print('CWM get real args:===', json_encode(args1))
+local any_time = require('oshine.cw_any_type')
+local cacher = require('oshine.cw_args_cacher'):new(any_time:newValue(args1):slice(1, -1))
 
-if args1[1] == 'login' then
+cacher:ready(args1[1]):cache('login', function()
     local member = require('oshine.cwm.api.member'):new()
     member:login(args1[2], args1[3])
 
-
-elseif args1[1] == 'logout' then
+end)  :cache('logout', function()
     print('login start with')
-
-elseif args1[1] == 'install' and args1[2] and args1[2] == 'plugs' then
-    -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
-    -- install dir is [~/username/cwm/]
-    require('oshine.cwm.installer'):new(args1[3] or pwd()):install_plugs()
-
-elseif in_array(args1[1], { '-i', 'i', 'install' }) then
-
+end)  :cache('install', function()
+    cacher:cache('plugs', function()
+        -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
+        -- install dir is [~/username/cwm/]
+        require('oshine.cwm.installer'):new(args1[3] or pwd()):install_plugs()
+    end)
+end)  :cache('install', '-i', 'i', function()
     require('oshine.cwm.installer'):new(args1[1] or pwd()):install()
+end)  :cache('send', '-i', 'i', function(catch)
+    -- 发送文件给好友
+    catch:cache('user', function()
 
-elseif args1[1] == 'cmd' then
+    end) :cache('his', 'history', function()
+
+    end) :cache('list', 'ls', function()
+
+    end) :cache('que', 'queue', function()
+
+    end) :cacheHelp(function()
+        return [[cwm send his]]
+    end)
+end)  :cache('install', '-i', 'i', function()
+    print('login start with')
+end)  :cache('pro', 'program', function()
+
+end)  :cache('article', 'art', function()
+
+end)  :cache('fav', 'favorite', function()
+
+end)  :cache('send', function()
+
+end)  :cache('cmd', function()
     -- internal cmd
     -- cwm _cmd oshine/bitmap check
     if #args1 > 2 then
@@ -58,21 +80,17 @@ elseif args1[1] == 'cmd' then
         end
         r.run(p)
     end
-elseif args1[1] == 'status' then
-elseif args1[1] == 'package' then
+end)  :cache('status', function()
+
+end)  :cache('package', function()
     if args1[2] == 'search' then
 
     elseif args1[2] == 'status' then
 
     end
-elseif args1[1] == 'search' then
-elseif args1[1] == 'program' then
-    -- cwp program
-    if args1[2] == 'status' then
-    elseif args1[2] == 'search' then
+end)  :cache('search', function()
 
-    end
-elseif args1[1] == 'plugs' then
+end)  :cache('plugs', function()
     if args1[2] == 'status' then
     elseif args1[2] == 'search' then
     elseif args1[2] == 'remote' then
@@ -83,6 +101,6 @@ elseif args1[1] == 'plugs' then
 
         end
     end
-elseif in_array(args1[1], { '-h', '--help' }) then
+end)  :cache('-h', '--help', function()
     print('you may use like this')
-end
+end)  :run()
