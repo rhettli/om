@@ -1,9 +1,16 @@
 
 
+-- https://gitee.com/oshine/cwm/repository/archive/master.zip
+-- https://github.com/rhettli/cwm/archive/master.zip
 
-download('https://gitee.com/oshine/cwm/repository/archive/master.zip')
-local host=''
+
+
+
+local host='https://github.com/rhettli'
 local r=readline('choose download host depend on your network,type:[1 gitee,2 github]:')
 if r==1 then
-
+    host='https://gitee.com/oshine/cwm/repository'
 end
+
+
+download(host..'/archive/master.zip')
