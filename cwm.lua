@@ -23,47 +23,57 @@ local args1 = args()
 table.remove(args1, 1)
 
 print('CWM get real args:===', json_encode(args1))
+
+if in_array(args1[1], { 'install', '-i', 'i' }) then
+    require('oshine.cwm.installer'):new(args1[1] or pwd()):install()
+    return
+end
+
 local any_time = require('oshine.cw_any_type')
-local cacher = require('oshine.cw_args_cacher'):new(any_time:newValue(args1):slice(1, -1))
+local capture = require('oshine.cw_args_capture'):new(any_time:new(args1):sliceToRight(1))
 
-cacher:ready(args1[1]):cache('login', function()
+capture:catch('login', function(login_c)
     local member = require('oshine.cwm.api.member'):new()
-    member:login(args1[2], args1[3])
+    local email = login_c:catchNext()
+    member:login(email)
 
-end)  :cache('logout', function()
-    print('login start with')
-end)  :cache('install', function()
-    cacher:cache('plugs', function()
+end)   :catch('logout', function()
+    print('logout ...')
+    require('oshine.cwm.api.member'):new():logout()
+
+end)   :catch('install', function(c)
+    c:catch('plugs', function()
         -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
         -- install dir is [~/username/cwm/]
         require('oshine.cwm.installer'):new(args1[3] or pwd()):install_plugs()
     end)
-end)  :cache('install', '-i', 'i', function()
-    require('oshine.cwm.installer'):new(args1[1] or pwd()):install()
-end)  :cache('send', '-i', 'i', function(catch)
-    -- 发送文件给好友
-    catch:cache('user', function()
-
-    end) :cache('his', 'history', function()
-
-    end) :cache('list', 'ls', function()
-
-    end) :cache('que', 'queue', function()
-
-    end) :cacheHelp(function()
+end)   :catch('send', function(c, is_show_help)
+    if is_show_help then
         return [[cwm send his]]
-    end)
-end)  :cache('install', '-i', 'i', function()
-    print('login start with')
-end)  :cache('pro', 'program', function()
+    end
 
-end)  :cache('article', 'art', function()
+    -- 发送文件给好友
+    c   :catch('user', function(user_c)
+        local user = user_c:catchNext() --or user_c:catchArg({ '-u', '--user' })
+        local file = user_c:catchNextAll() --or user_c:catchArg({ '-f', '--file' })
 
-end)  :cache('fav', 'favorite', function()
+    end):catch({ 'his', 'history' }, function()
 
-end)  :cache('send', function()
+    end):catch({ 'list', 'ls' }, function()
 
-end)  :cache('cmd', function()
+    end):catch({ 'que', 'queue' }, function()
+
+    end):run()
+
+end)   :catch({ 'pro', 'program' }, function()
+
+end)   :catch({ 'article', 'art' }, function()
+
+end)   :catch({ 'fav', 'favorite' }, function()
+
+end)   :catch('send', function()
+
+end)   :catch('cmd', function()
     -- internal cmd
     -- cwm _cmd oshine/bitmap check
     if #args1 > 2 then
@@ -80,17 +90,17 @@ end)  :cache('cmd', function()
         end
         r.run(p)
     end
-end)  :cache('status', function()
+end)   :catch('status', function()
 
-end)  :cache('package', function()
+end)   :catch('package', function()
     if args1[2] == 'search' then
 
     elseif args1[2] == 'status' then
 
     end
-end)  :cache('search', function()
+end)   :catch('search', function()
 
-end)  :cache('plugs', function()
+end)   :catch('plugs', function()
     if args1[2] == 'status' then
     elseif args1[2] == 'search' then
     elseif args1[2] == 'remote' then
@@ -101,6 +111,4 @@ end)  :cache('plugs', function()
 
         end
     end
-end)  :cache('-h', '--help', function()
-    print('you may use like this')
-end)  :run()
+end)   :run()
