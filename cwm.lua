@@ -25,14 +25,15 @@ table.remove(args1, 1)
 print('CWM get real args:===', json_encode(args1))
 
 if in_array(args1[1], { 'install', '-i', 'i' }) then
-    require('oshine.cwm.installer'):new(args1[1] or pwd()):install()
+    require('oshine.cwm.installer'):new(args1[2] or pwd()):install()
     return
 end
 
-local any_time = require('oshine.cw_any_type')
-local capture = require('oshine.cw_args_capture'):new(any_time:new(args1):sliceToRight(1))
+local any_time = require('oshine.cw_any_type.anyType'):new(args1)
+local capture = require('oshine.cw_args_capture.capture'):new(any_time:sliceToRight(1))
 
 capture:catch('login', function(login_c)
+    print('login ready>>>')
     local member = require('oshine.cwm.api.member'):new()
     local email = login_c:catchNext()
     member:login(email)
@@ -90,14 +91,44 @@ end)   :catch('cmd', function()
         end
         r.run(p)
     end
-end)   :catch('status', function()
-
-end)   :catch('package', function()
-    if args1[2] == 'search' then
-
-    elseif args1[2] == 'status' then
-
+end)   :catch('status', function(c)
+    --c:trgger('pakcage.status')
+end)   :catch('package', function(package_c, is_show_help)
+    if is_show_help then
+        return [[
+        package  search bitmap
+        package  list
+        package  add
+        package  search local bitmap
+        package  list local
+        ]]
     end
+
+    local action = package_c:catchNext()
+    if action == 'local' then
+        -- exec local cmd line
+        local pac = require('oshine.cwm.local_parse.package'):new()
+        action = package_c:catchNext()
+        if action == 'search' then
+            pac:search()
+        elseif action == 'list' then
+            pac:status()
+        end
+        return
+    end
+
+    local pac = require('oshine.cwm.api.package'):new()
+    if action == 'add' then
+        local n = package_c:catchNext()
+        local s = package_c:catchNext()
+        pac:add(n, s)
+    elseif action == 'search' then
+        local key = package_c:catchNext()
+        pac:search(key)
+    elseif action == 'list' then
+        pac:status()
+    end
+
 end)   :catch('search', function()
 
 end)   :catch('plugs', function()
