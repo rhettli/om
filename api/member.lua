@@ -8,7 +8,7 @@ end
 function m:login(email)
     local psw = read_line('TypePsw', true)
     local device_no = str_replace(require('oshine.cw_device.device'):new():getDeviceNo(), '-', '')
-    local form = { email = email, psw = psw, platform = os(), device_no = device_no }
+    local form = { psw = psw, email = email, platform = os(), device_no = device_no }
 
     http:request('/api/member/login', { form = form })._then(function(r)
         if -1 ~= tonumber(r.code) and r.data then

@@ -16,8 +16,6 @@ if not exist %p1%cwm.cmd (
     setx CWM_PATH %~dp0
 )
 
-
-
 set allparam=
 
 :param
@@ -25,6 +23,7 @@ set str=%1
 if "%str%"=="" (
     goto end
 )
+
 set allparam=%allparam% %str%
 shift /0
 goto param
@@ -49,7 +48,7 @@ echo %allparam%
 ::  echo -- cw login==    cwjit /cwm login
 ::  echo -- cw install==  cwjit /cwm install
 
-echo %CW_PATH%\cw.exe runner start
+echo allparam is  %allparam%
 
 if exist %CW_PATH%\cw.exe (
     %CW_PATH%\cw.exe   %CWM_PATH%\..\cwm.lua  %allparam%

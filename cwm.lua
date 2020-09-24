@@ -98,7 +98,7 @@ end)   :catch('package', function(package_c, is_show_help)
         return [[
         package  search bitmap
         package  list
-        package  add
+        package  add package_name git_source title  [exp:package add oshine/bitmap gitee.com/oshine.bitmap "A 2d drawer"]
         package  search local bitmap
         package  list local
         ]]
@@ -119,9 +119,9 @@ end)   :catch('package', function(package_c, is_show_help)
 
     local pac = require('oshine.cwm.api.package'):new()
     if action == 'add' then
-        local n = package_c:catchNext()
-        local s = package_c:catchNext()
-        pac:add(n, s)
+        local package_name = package_c:catchNext()
+        local git_source = package_c:catchNext()
+        pac:add(package_name, git_source)
     elseif action == 'search' then
         local key = package_c:catchNext()
         pac:search(key)

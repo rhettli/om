@@ -12,7 +12,7 @@ function m:add(package_name, git_source)
         return
     end
 
-    local form_ = { package_name = package_name, git_source = git_source }
+    local form_ = { package_name = package_name, git_source = git_source}
 
     http:request('/api/cw_package/add', { form = form_ })._then(function(r)
         if -1 ~= tonumber(r.code) and r.data then
