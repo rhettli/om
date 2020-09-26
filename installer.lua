@@ -126,7 +126,7 @@ function class_installer:install_plugs  ()
 end
 
 function class_installer:install(dir)
-
+    local package =require('package')
 end
 
 return class_installer

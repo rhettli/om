@@ -6,7 +6,7 @@ return {
     -- where should this package install,[default:local]
     self_install = 'global',
     -- local:install dependecies install vendor folder
-    -- or global:install dependencies install global dir
+    -- or global:install dependencies install global dir if install as package
     -- [default:local]
     dependencies_install = 'global',
     -- ['package_name'] = 'version'

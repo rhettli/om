@@ -13,14 +13,31 @@ install_dir = home() .. '/cwm'
 package.path = install_dir .. '/?.lua;' .. package.path .. ';'
 
 print("package.path:===", package.path)
-local ext
-
--- cwm login -u root -p oshine
--- cw.exe cwm.lua login -u root -p oshine
--- cwm status
 
 local args1 = args()
 table.remove(args1, 1)
+if os() == 'windows' then
+    if args1[1] == 'cwm' then
+        table.remove(args1, 1)
+    end
+else
+    -- handler for cmdline [cwm cmd oshine/cw_unix_cmd windows]
+    if #args1 > 2 then
+        local r = require(args1[2] .. '.cmd.' .. args1[3])
+        local p = {}
+        if #args1 > 3 then
+            local index = 1
+            for i, v in pairs(args1) do
+                if index > 3 then
+                    p[i] = v
+                end
+                index = index + 1
+            end
+        end
+        r.run(p)
+    end
+    return
+end
 
 print('CWM get real args:===', json_encode(args1))
 
@@ -74,23 +91,6 @@ end)   :catch({ 'fav', 'favorite' }, function()
 
 end)   :catch('send', function()
 
-end)   :catch('cmd', function()
-    -- internal cmd
-    -- cwm _cmd oshine/bitmap check
-    if #args1 > 2 then
-        local r = require(args1[2] .. '.cmd.' .. args1[3])
-        local p = {}
-        if #args1 > 3 then
-            local index = 1
-            for i, v in pairs(args1) do
-                if index > 3 then
-                    p[i] = v
-                end
-                index = index + 1
-            end
-        end
-        r.run(p)
-    end
 end)   :catch('status', function(c)
     --c:trgger('pakcage.status')
 end)   :catch('package', function(package_c, is_show_help)

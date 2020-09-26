@@ -6,7 +6,6 @@ function m:new()
 end
 
 function m:request(path, params)
-
     if type(params.form) == 'table' then
         local form = params.form
         params.form = ''
