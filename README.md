@@ -8,13 +8,16 @@ cw installer  [cw 包管理器]
 Attention[请注意]：
 `before install cwm ,you must install cw laguage【安装cwm之前必须先安装cw语言】`
 
-**1.For windows** 
+# **1.For windows【为Windows安装cwm】** 
+## if you are on win10 or you have already install powershell【如果你是win10 或安装了powershell】
 ```
-# if you are on win10 or you have already install powershell
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
-# if you are not install powershell ,just download install pakcage
 ```
-**1.For drawin(mac) and linux** 
+## if you are not install powershell【如果你没有安装poowershell】 
+ **[Download install pakcage【下载安装包】](http://wooyri.com/cw/cownload)** 
+
+
+# **2.For drawin(mac) and linux** 
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
