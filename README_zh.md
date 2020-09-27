@@ -2,6 +2,7 @@
 
 **[[english]](https://gitee.com/oshine/cwm/blob/master/README.md)**
 
+遇到一个瓶颈【如何通过http请求方式知道git中包含的版本】：知道的小伙伴告知下，谢谢！
 
 #### 介绍 
 ```
