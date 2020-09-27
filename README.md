@@ -3,17 +3,17 @@
 **[[中文]](https://gitee.com/oshine/cwm/blob/master/README_zh.md)**
 
 #### 介绍 
-1.cwm 可以帮你管理所有的cw包，已经创建新的cwm包
-2.cwm 可创建替代unix系统的命令行工具
-3.cwm 可以收藏您喜欢的文件图片文字等
-4.cwm 可以把您喜欢的文件分享给朋友
-5.cwm 提供了一个网盘，默认1G空间
+1.cwm help you manager you cw language package and create new package
+2.cwm create cmdline run on windows like some cmd run on unix
+3.cwm can add some file/picture/string to favorite
+4.cwm can share the file to your friend
+5.cwm support a net disk, default 1 Gb 
 
 #### install【安装教程】
 Attention[请注意]：
-`before install cwm ,you must install cw laguage【安装cwm之前必须先安装cw语言】`
+`before install cwm ,you must install cw laguage`
 
-# **1.For windows【为Windows安装cwm】** 
+# **1.For windows** 
 ## if you are on win10 or you have already install powershell
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
