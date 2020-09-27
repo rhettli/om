@@ -14,7 +14,7 @@
 
 #### 【安装教程】
 [请注意]：
-`cwm安装cwm之前必须先安装cw语言`
+`安装cwm之前必须先安装cw语言`
 
 # **1.为Windows安装cwm** 
 ## 如果你是win10 或安装了powershell
