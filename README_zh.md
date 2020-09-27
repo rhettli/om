@@ -1,5 +1,8 @@
 # cwm:cw 包管理器
-**[english]**
+
+**[[english]](https://gitee.com/oshine/cwm/blob/master/README.md)**
+
+
 #### 介绍 
 1.cwm 可以帮你管理所有的cw包，已经创建新的cwm包
 2.cwm 可创建替代unix系统的命令行工具
