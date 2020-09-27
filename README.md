@@ -10,9 +10,11 @@ Attention[请注意]：
 
 **1.For windows** 
 ```
+# if you are on win10 or you have already install powershell
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
+# if you are not install powershell ,just download install pakcage
 ```
-**1.For windows** 
+**1.For drawin(mac) and linux** 
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
