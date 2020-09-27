@@ -2,12 +2,14 @@
 
 **[[中文]](https://gitee.com/oshine/cwm/blob/master/README_zh.md)**
 
-#### 介绍 
+#### Attention
+```
 1.cwm help you manager you cw language package and create new package
 2.cwm create cmdline run on windows like some cmd run on unix
 3.cwm can add some file/picture/string to favorite
 4.cwm can share the file to your friend
 5.cwm support a net disk, default 1 Gb 
+```
 
 #### install【安装教程】
 Attention[请注意]：
