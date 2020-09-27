@@ -1,20 +1,25 @@
-# cwm:cw language package manger
+# cwm:cw language package manager
 
-#### 介绍
-cw installer  [cw 包管理器]
+**[[中文]](https://gitee.com/oshine/cwm/edit/master/README_zh.md)**
 
+#### 介绍 
+1.cwm 可以帮你管理所有的cw包，已经创建新的cwm包
+2.cwm 可创建替代unix系统的命令行工具
+3.cwm 可以收藏您喜欢的文件图片文字等
+4.cwm 可以把您喜欢的文件分享给朋友
+5.cwm 提供了一个网盘，默认1G空间
 
 #### install【安装教程】
 Attention[请注意]：
 `before install cwm ,you must install cw laguage【安装cwm之前必须先安装cw语言】`
 
 # **1.For windows【为Windows安装cwm】** 
-## if you are on win10 or you have already install powershell【如果你是win10 或安装了powershell】
+## if you are on win10 or you have already install powershell
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
-## if you are not install powershell【如果你没有安装poowershell】 
- **[Download install pakcage【下载安装包】](http://wooyri.com/cw/cownload)** 
+## if you are not install powershell
+ **[Download install pakckage](http://wooyri.com/cw/cownload)** 
 
 
 # **2.For drawin(mac) and linux** 
@@ -22,9 +27,9 @@ powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
 
-#### join【参与贡献】
+#### join
 
-1.  Fork 【Fork 本仓库】
-2.  create Feat_xxx 【新建 Feat_xxx 分支】
-3.  submit code【提交代码】
-4.  create pull request【新建 Pull Request】
+1.  Fork 
+2.  create Feat_xxx 
+3.  submit code
+4.  create pull request
