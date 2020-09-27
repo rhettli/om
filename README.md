@@ -1,6 +1,6 @@
 # cwm:cw language package manager
 
-**[[中文]](https://gitee.com/oshine/cwm/edit/master/README_zh.md)**
+**[[中文]](https://gitee.com/oshine/cwm/blob/master/README_zh.md)**
 
 #### 介绍 
 1.cwm 可以帮你管理所有的cw包，已经创建新的cwm包
