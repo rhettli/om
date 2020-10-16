@@ -10,7 +10,7 @@
 
 install_dir = home() .. '/cwm'
 
-package.path = install_dir .. '/?.lua;' .. package.path .. ';'
+package.path = install_dir .. '/?.cw;' .. package.path .. ';'
 
 print("package.path:===", package.path)
 
@@ -21,7 +21,7 @@ if os() == 'windows' then
         table.remove(args1, 1)
     end
 else
-    -- handler for cmdline [cwm cmd oshine/cw_unix_cmd windows]
+    -- handler for cmdline [cwm cmd oshine/cw_rename rename]
     if #args1 > 2 then
         local r = require(args1[2] .. '.cmd.' .. args1[3])
         local p = {}
@@ -131,15 +131,4 @@ end)   :catch('package', function(package_c, is_show_help)
 
 end)   :catch('search', function()
 
-end)   :catch('plugs', function()
-    if args1[2] == 'status' then
-    elseif args1[2] == 'search' then
-    elseif args1[2] == 'remote' then
-        local plugs = require('oshine.cwm.api.plugs'):new()
-        if args1[3] == 'recorder' then
-            plugs:recorder()
-        elseif args1[3] == 'add' then
-
-        end
-    end
 end)   :run()

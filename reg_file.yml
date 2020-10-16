@@ -1,6 +1,0 @@
-# reg a file ,when click the file ,will call this plugs.
-zip:
-  icon:
-    a.ico
-  review:
-    review.lua
