@@ -47,7 +47,7 @@ if in_array(args1[1], { 'install', '-i', 'i' }) then
 end
 
 local any_time = require('oshine.cw_any_type.anyType'):new(args1)
-local capture = require('oshine.cw_args_capture.capture'):new(any_time:sliceToRight(1))
+local capture = require('oshine.cw_args.capture'):new(any_time:sliceToRight(1))
 
 capture:catch('login', function(login_c)
     print('login ready>>>')
