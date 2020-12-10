@@ -3,6 +3,6 @@
 
 
 return {
-    install_dir = home()..'/cwm/',
+    install_dir = _home()..'/cwm/',
     start_plugs = 'auto'
 }

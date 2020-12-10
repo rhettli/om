@@ -1,3 +1,6 @@
+-- Author: liyanxi
+-- Email:  liyanxi_rhett@outlook.com
+
 -- when the install this plugs ,the init.lua will be run one times.
 
 --https://gitee.com/oshine/cwm/raw/master/init.lua
@@ -89,7 +92,14 @@ end)   :catch({ 'article', 'art' }, function()
 
 end)   :catch({ 'fav', 'favorite' }, function()
 
-end)   :catch('send', function()
+end)   :catch('hook', function()
+    -- toggle hook，can be all resources hook,like article,file,picture,video,audio... [触发钩子,各种资源钩子，文章/文件/图片/视频/音频/...：
+    -- cwm hook oshine/177821
+
+end)   :catch('api', function()
+    -- cwm api storage exchange 100GB
+
+end)   :catch('check', function() -- check all installed plug's status/检查所有的已经安装的plugs的运行状态
 
 end)   :catch('status', function(c)
     --c:trgger('pakcage.status')
@@ -130,5 +140,6 @@ end)   :catch('package', function(package_c, is_show_help)
     end
 
 end)   :catch('search', function()
+    -- search article ,share hook...
 
 end)   :run()

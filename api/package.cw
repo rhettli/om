@@ -6,7 +6,16 @@ function m:new()
 end
 
 function m:add(package_name, git_source)
-    print('', package_name, git_source)
+    local illegal_filter = { 'api', 'check', 'login', 'hook', 'logout',
+                             'status', 'send', 'install[-i/i]', 'program[prg]',
+                             'favorite[fav]', 'article[art]',
+                             'package[pkg]', 'search[ser]' };
+    if in_array(package_name, illegal_filter) then
+        out('package_name can be any of ' .. join(',', illegal_filter))
+        return
+    end
+
+    print('Add new package to server too be install for other people:', package_name, git_source)
     if not is_valid(package_name, git_source) then
         print('package_name or git_source is empty')
         return
@@ -36,10 +45,10 @@ function m:_install(data)
     else
         git_source = { git_source }
     end
-    for i, v in pairs(git_source) do
+    for _, v in pairs(git_source) do
         local download_path = install_where .. '/' .. data.name .. '.zip'
         local dr = download(v, download_path, function(r)
-            print(r)
+            print(r .. '%')
         end)
         if dr then
             un_compress(download_path)
@@ -63,7 +72,7 @@ function m:search(key, is_install)
                     self:_install(r.data)
                     return
                 end
-                for i, v in pairs(r.data) do
+                for _, v in pairs(r.data) do
                     print(v.name, v.title, v.port, v.git_source, v.install_times, v.platform, v.remark)
                 end
             end
