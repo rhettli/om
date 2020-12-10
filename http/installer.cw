@@ -6,7 +6,7 @@
 
 
 local host = 'https://github.com/rhettli'
-local r = readline('choose download host depend on your network,type:[1 gitee,2 github]:')
+local r = readline('choose download trs.cw depend on your network,type:[1 gitee,2 github]:')
 if r == 1 then
     host = 'https://gitee.com/oshine/cwm/repository'
 end

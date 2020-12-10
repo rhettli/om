@@ -11,13 +11,17 @@
 --print(_DIR)
 --print('pwd:==', pwd())
 
-install_dir = home() .. '/cwm'
+install_dir = _home() .. '/cwm'
 
 package.path = install_dir .. '/?.cw;' .. package.path .. ';'
 
+local conf = require('oshine.cwm.conf.conf')
+local trs = require('oshine.cwm.conf.trs')
+local lan = conf.language
+
 print("package.path:===", package.path)
 
-local args1 = args()
+local args1 = _args()
 table.remove(args1, 1)
 if os() == 'windows' then
     if args1[1] == 'cwm' then
@@ -42,76 +46,61 @@ else
     return
 end
 
-print('CWM get real args:===', json_encode(args1))
+print('CWM get real args:===', _json_encode(args1))
 
-if in_array(args1[1], { 'install', '-i', 'i' }) then
-    require('oshine.cwm.installer'):new(args1[2] or pwd()):install()
+if _in_array(args1[1], { 'install', '-i', 'i' }) then
+    require('oshine.cwm.installer'):new(args1[2] or _pwd()):install()
     return
 end
 
-local any_time = require('oshine.cw_any_type.anyType'):new(args1)
-local capture = require('oshine.cw_args.capture'):new(any_time:sliceToRight(1))
+local any_type = require('oshine.cw_any_type.anyType'):new(args1)
+local capture = require('oshine.cw_args.capture'):new(any_type:sliceToRight(1))
+any_type = nil
 
 capture:catch('login', function(login_c)
     print('login ready>>>')
     local member = require('oshine.cwm.api.member'):new()
     local email = login_c:catchNext()
     member:login(email)
-
-end)   :catch('logout', function()
+end):catch('logout', function()
     print('logout ...')
     require('oshine.cwm.api.member'):new():logout()
-
-end)   :catch('install', function(c)
+end):catch('install', function(c)
     c:catch('plugs', function()
         -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
         -- install dir is [~/username/cwm/]
-        require('oshine.cwm.installer'):new(args1[3] or pwd()):install_plugs()
+        require('oshine.cwm.installer'):new(args1[3] or _pwd()):install_plugs()
     end)
-end)   :catch('send', function(c, is_show_help)
+end):catch('send', function(c, is_show_help)
     if is_show_help then
         return [[cwm send his]]
     end
 
     -- 发送文件给好友
-    c   :catch('user', function(user_c)
+    c:catch('user', function(user_c)
         local user = user_c:catchNext() --or user_c:catchArg({ '-u', '--user' })
         local file = user_c:catchNextAll() --or user_c:catchArg({ '-f', '--file' })
-
     end):catch({ 'his', 'history' }, function()
-
     end):catch({ 'list', 'ls' }, function()
-
     end):catch({ 'que', 'queue' }, function()
-
     end):run()
-
-end)   :catch({ 'pro', 'program' }, function()
-
-end)   :catch({ 'article', 'art' }, function()
-
-end)   :catch({ 'fav', 'favorite' }, function()
-
-end)   :catch('hook', function()
+end):catch({ 'pro', 'program' }, function()
+end):catch({ 'conf', 'config' }, function()
+end):catch({ 'storage' }, function() -- local storage/本地存储命令行
+end):catch({ 'article', 'art' }, function()
+end):catch({ 'fav', 'favorite' }, function()
+end):catch({ 'clo', 'cloud' }, function() -- cloud storage/云存储，oss|disk
+end):catch('hook', function()
     -- toggle hook，can be all resources hook,like article,file,picture,video,audio... [触发钩子,各种资源钩子，文章/文件/图片/视频/音频/...：
     -- cwm hook oshine/177821
-
-end)   :catch('api', function()
+end):catch('api', function()
     -- cwm api storage exchange 100GB
-
-end)   :catch('check', function() -- check all installed plug's status/检查所有的已经安装的plugs的运行状态
-
-end)   :catch('status', function(c)
+end):catch('check', function() -- check all installed plug's status/检查所有的已经安装的plugs的运行状态
+end):catch('status', function(c)
     --c:trgger('pakcage.status')
-end)   :catch('package', function(package_c, is_show_help)
+end):catch('package', function(package_c, is_show_help)
     if is_show_help then
-        return [[
-        package  search bitmap
-        package  list
-        package  add package_name git_source title  [exp:package add oshine/bitmap gitee.com/oshine.bitmap "A 2d drawer"]
-        package  search local bitmap
-        package  list local
-        ]]
+        return trs[lan]['']
     end
 
     local action = package_c:catchNext()
@@ -138,8 +127,6 @@ end)   :catch('package', function(package_c, is_show_help)
     elseif action == 'list' then
         pac:status()
     end
-
-end)   :catch('search', function()
+end):catch('search', function()
     -- search article ,share hook...
-
-end)   :run()
+end):run()

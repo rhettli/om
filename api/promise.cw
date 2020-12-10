@@ -1,6 +1,6 @@
 -- Author:liyanxi liyanxi_rhett@[outlook/126/foxmail/icloud/wooyri].com
 
--- Todo ,read host form /conf/host
+-- Todo ,read trs.cw form /conf/trs.cw
 local m = { host = 'http://127.0.0.1:8008' }
 
 function m:new()

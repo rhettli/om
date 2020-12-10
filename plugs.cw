@@ -12,7 +12,7 @@ function class_plugs:new  (lib_name)
     end
 
     self._lib_name = lib_name
-    local conf=require('oshine.cwm.conf')
+    local conf=require('oshine.cwm.conf.conf')
 
     local current_dir = conf.install_dir .. str_replace(lib_name, '.', '/')
     print('want load lib:==', current_dir)

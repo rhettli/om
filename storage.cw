@@ -2,26 +2,49 @@
 
 local class_storage = {}
 
----@param prefix string|nil
-function class_storage:new  (prefix)
-    self.prefix = prefix or ''
-    self.dir = require('oshine.conf').install_dir
+--- @param package_name string|nil
+--- @param prefix string|nil
+function class_storage:new(package_name, prefix)
+    assert(package_name, 'package_name not be nil')
+    -- storage prefix with key/存储前缀
+    self._prefix = prefix or ''
+    -- install storage dir/存储目录
+    local conf = require('oshine.conf')
+
+    self._res = nil
+    self._lan = conf.language
+    assert(_in_array(self._lan, { 'en', 'zh' }), 'language must be en[english] or zh[中文] at conf file:' .. conf.install_dir ..
+            '/conf/conf.cw' .. ' | 语言只能英文或中文在配置文件' .. conf.install_dir .. '/conf/conf.cw')
+
+    self._dir = conf.install_dir .. '/storage' .. '/' .. package_name .. '/'
+    if not _file_exists(self._dir) then
+        assert(_mkdir(self._dir) > -1, ({ ['zh'] = '创建文件夹失败，请确认您是否有权限在目录：', ['en'] = 'create folder error,make sure you have permission at:' })[self._lan] .. self._dir)
+    end
+
     return self
 end
 
-function class_storage:put  (lib_name)
-    -- load another plugs
-    return self:new(lib_name)
+function class_storage:put(key, val, expire)
+    -- put something to disk with  prefix..projectname..key
+    local err
+    self._res, err = _file_put_contents(self._dir .. key, val)
+
+    return self._res, err
 end
 
-function class_storage:get   (...)
-    -- use http request to call plugs function
-
+function class_storage:result()
+    return self._res
 end
 
-function class_storage:clear   (...)
-    -- use http request to call plugs function
+function class_storage:get(key)
+    local err
+    self._res, err = _file_get_contents(self._dir .. '/' .. key)
+    return self._res, err
+end
 
+--- @param key string|nil  if key is nil,clear all data about package
+function class_storage:clear(key)
+    _delete(self._dir .. (key and key or ''))
 end
 
 return class_storage
