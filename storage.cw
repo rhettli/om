@@ -12,10 +12,11 @@ function class_storage:new(package_name, prefix)
     local conf = require('oshine.conf')
 
     self._res = nil
-    self._lan = conf.language
-    assert(_in_array(self._lan, { 'en', 'zh' }), 'language must be en[english] or zh[中文] at conf file:' .. conf.install_dir ..
+
+    assert(_in_array(conf.language, { 'en', 'zh' }), 'language must be en[english] or zh[中文] at conf file:' .. conf.install_dir ..
             '/conf/conf.cw' .. ' | 语言只能英文或中文在配置文件' .. conf.install_dir .. '/conf/conf.cw')
 
+    self._lan = conf.language
     self._dir = conf.install_dir .. '/storage' .. '/' .. package_name .. '/'
     if not _file_exists(self._dir) then
         assert(_mkdir(self._dir), ({ ['zh'] = '创建文件夹失败，请确认您是否有权限在目录：', ['en'] = 'create folder error,make sure you have permission at:' })[self._lan] .. self._dir)
