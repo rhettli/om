@@ -2,7 +2,7 @@
 
 return {
     -- oshine is member name ,cwm is package name
-    package_name = 'oshine/cwm',
+    ['package_name'] = 'oshine/cwm',
     -- where should this package install,[default:local]
     self_install = 'global',
     -- local:install dependecies install vendor folder

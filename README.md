@@ -1,4 +1,4 @@
-# cwm:cw language package manager
+# wpm:woo language package manager
 
 **[[中文]](https://gitee.com/oshine/cwm/blob/master/README_zh.md)**
 
@@ -27,6 +27,30 @@ powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 # **2.For drawin(mac) and linux** 
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
+```
+
+# 3.how to create cwm package
+`cwm new package cw_package_name`
+```lua
+return {
+    -- oshine is username of wooyri accout id
+    -- c_rename is package_name
+    ['package_name'] = "oshine/cw_rename",
+    -- you can use all to support all platform or [windows linux] only windows and linux
+    -- or [all !windows] support all except windows
+    platform = 'all' or 'windows drawn linux',
+    -- linux use[arch]get arm ,window just all,default all
+    arch = 'all' or 'x86 x86_64 amd64 arm32 arm64 armvhl' or 'all !armhf !armel',
+
+    -- package title
+    title = 'rename batch file tools',
+    -- package remark
+    ['remark'] = 'rename files easy',
+
+    -- export a global cmd map from cmd folder:/cmd/256.cw map with global name rename,
+    -- /cmd/finder.cw map with global cmd name finder
+    ['export'] = 'rename=256 finder=finder'
+}
 ```
 
 #### join

@@ -11,6 +11,8 @@
 --print(_DIR)
 --print('pwd:==', pwd())
 
+local table = table
+
 install_dir = _home() .. '/cwm'
 
 package.path = install_dir .. '/?.cw;' .. package.path .. ';'
@@ -127,6 +129,18 @@ end):catch('package', function(package_c, is_show_help)
     elseif action == 'list' then
         pac:status()
     end
+end):catch('demo', function()
+-- cwm demo oshine/bitmap           // show all demo about oshine/bitmap
+-- cwm demo oshine/bitmap circle    // run circle demo
+
+end):catch('lan', function(package_c, is_show_help)
+    local val=package_c:catchNext()
+    if val then
+
+    else
+
+    end
+
 end):catch('search', function()
     -- search article ,share hook...
 end):run()
