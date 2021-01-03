@@ -1,23 +1,23 @@
-# cwm:cw 包管理器
+# wo:wpm 包管理器
 
-**[[english]](https://gitee.com/oshine/cwm/blob/master/README.md)**
+**[[english]](https://gitee.com/oshine/wpm/blob/master/README.md)**
 
 遇到一个瓶颈【如何通过http请求方式知道git中包含的版本】：知道的小伙伴告知下，谢谢！
 
 #### 介绍 
 ```
-1.cwm 可以帮你管理所有的cw包，已经创建新的cwm包
-2.cwm 可创建替代unix系统的命令行工具
-3.cwm 可以收藏您喜欢的文件图片文字等
-4.cwm 可以把您喜欢的文件分享给朋友
-5.cwm 提供了一个网盘，默认1G空间
+1.wpm 可以帮你管理所有的cw包，已经创建新的cwm包
+2.wpm 可创建替代unix系统的命令行工具
+3.wpm 可以收藏您喜欢的文件图片文字等
+4.wpm 可以把您喜欢的文件分享给朋友
+5.wpm 提供了一个网盘，默认1G空间
 ```
 
 #### 【安装教程】
 [请注意]：
-`安装cwm之前必须先安装cw语言`
+`安装wpm之前必须先安装cw语言`
 
-# **1.为Windows安装cwm** 
+# **1.为Windows安装wpm** 
 ## 如果你是win10 或安装了powershell
 ```
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ;cw _.lua; }
@@ -26,14 +26,14 @@ powershell -cmmmand {curl http://w.installer.lua -o _.lua ;cw _.lua; }
  **[【下载安装包】](http://wooyri.com/cw/cownload)** 
 
 
-# **2.为 drawin(mac) 和 linux 系统安装cwm** 
+# **2.为 drawin(mac) 和 linux 系统安装wpm** 
 ```
 sh -c curl http://w.installer.lua -o _.lua && cw _.lua; 
 ```
 
 #  **3.新建cwm包并且提交供他人安装** 
-**cwm包新建包命令**
-`cwm create package_name`
+**wpm包新建包命令**
+`wpm create package_name`
 
 #### 1.如果你的包是供他人安装，那么package.lua中的require可以忽略，如果不可用作为资源包供他人代码引用，那么必须把 require设置为false 或 0
 ```lua

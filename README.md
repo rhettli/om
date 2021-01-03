@@ -13,7 +13,7 @@
 
 #### install【安装教程】
 Attention[请注意]：
-`before install cwm ,you must install cw laguage`
+`before install wpm ,you must install woo laguage`
 
 # **1.For windows** 
 ## if you are on win10 or you have already install powershell
@@ -21,7 +21,7 @@ Attention[请注意]：
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
 ## if you are not install powershell
- **[Download install pakckage](http://wooyri.com/cw/cownload)** 
+ **[Download install pakckage](http://wooyri.com/wpm/cownload)** 
 
 
 # **2.For drawin(mac) and linux** 
@@ -29,8 +29,8 @@ powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 powershell -cmmmand {curl http://w.installer.lua -o _.lua ; }
 ```
 
-# 3.how to create cwm package
-`cwm new package cw_package_name`
+# 3.how to create wpm package
+`wpm new package cw_package_name`
 ```lua
 return {
     -- oshine is username of wooyri accout id
