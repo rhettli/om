@@ -3,3 +3,5 @@ main
 .vscode
 go.sum
 .xml
+
+.woo_manual

@@ -1,11 +1,11 @@
 -- Author: liyanxi
 -- Email:  liyanxi_rhett@outlook.com
 
--- when the install this plugs ,the init.lua will be run one times.
+-- when the install this plugs ,the init.woo will be run one times.
 
---https://gitee.com/oshine/cwm/raw/master/init.lua
+--https://gitee.com/oshine/cwm/raw/master/init.woo
 
---curl https://gitee.com/oshine/cwm/raw/master/init.lua  -s
+--curl https://gitee.com/oshine/cwm/raw/master/init.woo  -s
 
 --print('dir:==', dir(''))
 --print(_DIR)
@@ -17,8 +17,8 @@ install_dir = _home() .. '/cwm'
 
 package.path = install_dir .. '/?.cw;' .. package.path .. ';'
 
-local conf = require('oshine.cwm.conf.conf')
-local trs = require('oshine.cwm.conf.trs')
+local conf = require('oshine.cwm@:conf.conf')
+local trs = require('oshine.cwm@:conf.trs')
 local lan = conf.language
 
 print("package.path:===", package.path)
@@ -51,27 +51,27 @@ end
 print('CWM get real args:===', _json_encode(args1))
 
 if _in_array(args1[1], { 'install', '-i', 'i' }) then
-    require('oshine.cwm.installer'):new(args1[2] or _pwd()):install()
+    require('oshine.cwm@:installer'):new(args1[2] or _pwd()):install()
     return
 end
 
-local any_type = require('oshine.cw_any_type.anyType'):new(args1)
-local capture = require('oshine.cw_args.capture'):new(any_type:sliceToRight(1))
+local any_type = require('oshine.cw_any_type@:anyType'):new(args1)
+local capture = require('oshine.cw_args@:capture'):new(any_type:sliceToRight(1))
 any_type = nil
 
 capture:catch('login', function(login_c)
     print('login ready>>>')
-    local member = require('oshine.cwm.api.member'):new()
+    local member = require('oshine.cwm@:api.member'):new()
     local email = login_c:catchNext()
     member:login(email)
 end):catch('logout', function()
     print('logout ...')
-    require('oshine.cwm.api.member'):new():logout()
+    require('oshine.cwm@:api.member'):new():logout()
 end):catch('install', function(c)
     c:catch('plugs', function()
         -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
         -- install dir is [~/username/cwm/]
-        require('oshine.cwm.installer'):new(args1[3] or _pwd()):install_plugs()
+        require('oshine.cwm@:installer'):new(args1[3] or _pwd()):install_plugs()
     end)
 end):catch('send', function(c, is_show_help)
     if is_show_help then
@@ -108,7 +108,7 @@ end):catch('package', function(package_c, is_show_help)
     local action = package_c:catchNext()
     if action == 'local' then
         -- exec local cmd line
-        local pac = require('oshine.cwm.local_parse.package'):new()
+        local pac = require('oshine.cwm@:local_parse.package'):new()
         action = package_c:catchNext()
         if action == 'search' then
             pac:search()
@@ -118,7 +118,7 @@ end):catch('package', function(package_c, is_show_help)
         return
     end
 
-    local pac = require('oshine.cwm.api.package'):new()
+    local pac = require('oshine.cwm@:api.package'):new()
     if action == 'add' then
         local package_name = package_c:catchNext()
         local git_source = package_c:catchNext()
@@ -133,14 +133,16 @@ end):catch('demo', function()
 -- cwm demo oshine/bitmap           // show all demo about oshine/bitmap
 -- cwm demo oshine/bitmap circle    // run circle demo
 
-end):catch('lan', function(package_c, is_show_help)
+end):catch('config', function(package_c, is_show_help)
+    local key=package_c:catchNext()
     local val=package_c:catchNext()
-    if val then
-
-    else
+    if key and val then
+        require('oshine.cwm@:utils.utils').configSet(key,val,function ()
+            conf = require('oshine.cwm@:conf.conf')
+        end)
+    elseif is_show_help then
 
     end
-
 end):catch('search', function()
     -- search article ,share hook...
 end):run()

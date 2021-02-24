@@ -16,5 +16,12 @@ return {
 
             end
         end
+    end,
+    configSet=function (key,val,func_callback_ok) -- 设置一个新的config值
+        
+        
+        if func_callback_ok then
+            func_callback_ok()
+        end
     end
 }
