@@ -8,13 +8,13 @@ local class_installer = {}
 function class_installer:new (work_dir_)
     work_dir = work_dir_
 
-    if not _file_exist(work_dir_ .. '/package.lua') then
+    if not _file_exist(work_dir_ .. '/package.woo') then
         out('package.yml lose,this not a correct package')
         return false
     end
 
     print('start parse:', work_dir_ .. '/package.yml')
-    local pStr = _file_save(work_dir_ .. '/package.lua')
+    local pStr = _file_save(work_dir_ .. '/package.woo')
 
     if not pStr then
         print('parse fail,check syntax:', err)
@@ -55,12 +55,12 @@ function class_installer:is_installed  ()
     local ini = require('ini'):new()
     local ok = ini.open(install_ini)
     if not ok then
-        out(false, 'can not open ini file,new one.')
+        _out(false, 'can not open ini file,new one.')
         return false
     end
 
     if ini:key('installed', yml.package_name) == yml.package_name then
-        out('package:' .. yml.package_name .. ' already installed,', 'you can use -r to reinstall this package.')
+        _out('package:' .. yml.package_name .. ' already installed,', 'you can use -r to reinstall this package.')
         return true
     end
 end
@@ -120,25 +120,27 @@ function class_installer:install_plugs  ()
         end
     end
 
-    file_in_folder(install_dir .. '/' .. yml.name .. '/cmd/', callback)
+    _ls(install_dir .. '/' .. yml.name .. '/cmd/', callback)
 
 end
 
 function class_installer:install()
-    local cwm_path = env('WPM_PATH')
+    local cwm_path = _env('WPM_PATH')
     print('cwm_path:===', cwm_path)
-    local package = require('package')
-    for i, v in pairs(package.dependencies) do
+
+    for pkg, v in pairs(yml.dependencies) do
         local install_where = 'local'
         local install_version = '*'
-        if str_index(v, '|') > -1 then
+        if _str_index(v, '|') > -1 then
             local sp = str_split(v, "|")
             install_where = sp[2]
             install_version = sp[1]
         end
         print('install dependencies:===', install_where, install_version)
-        require('api.package'):new():search(i,true)
-
+        require('api.package'):new():search(pkg, function(data)
+            print(pkg .. ' find ok,install now...')
+            _out(pkg)
+        end)
     end
 end
 

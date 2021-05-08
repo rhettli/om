@@ -84,6 +84,7 @@ for i, addr_host in pairs(addrs) do
         -- https://gitee.com/oshine/wpm/repository/archive/v1.0.11.zip?ref=v1.0.11&sha=fbaebe69d0e33c243f5c40a63cf8af26cb044b45&format=zip&captcha_type=yunpian&token=938e763645e446f78190ae5047f357b1&authenticate=784120e1cf514f91ac01d8251a81c696
         addr_host = addr_host .. '/repository/archive/v' .. available.data.ver .. '.zip'
     elseif _str_index(addr, 'github.com/') ~= -1 then
+        -- todo，install from github
 
     end
 
@@ -101,10 +102,20 @@ print(({ ['en'] = 'finish download,start unzip...',
          ['zh'] = '下载完成开始解压...' })[params.lan])
 
 local unzip_res = _zip('unzip', 'wpm.zip', params.install_dir .. '/')
-if unzip_res == true then
-    print(({ ['en'] = 'unzip success，install finish',
-             ['zh'] = '解压成功，安装完毕' })[params.lan])
-else
+if unzip_res ~= true then
     print(({ ['en'] = 'unzip fail:%s',
              ['zh'] = '解压失败:%s' })[params.lan]:format(unzip_res))
+    return
 end
+
+print(({ ['en'] = 'unzip success，install wpm dependencies package',
+         ['zh'] = '解压成功，安装wpm依赖包' })[params.lan])
+
+package.path = params.install_dir .. '/?.woo'
+
+local installer = require('wpm/installer')
+
+installer:new(params.install_dir):install()
+
+print(({ ['en'] = 'success',
+         ['zh'] = '成功' })[params.lan])

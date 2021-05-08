@@ -1,5 +1,4 @@
-local m = {}
-local http = require('oshine.cwm.api.promise'):new()
+local m = { http = require('oshine.cwm.api.promise'):new() }
 
 function m:new()
     return self
@@ -23,7 +22,7 @@ function m:add(package_name, git_source)
 
     local form_ = { package_name = package_name, git_source = git_source }
 
-    http:request('/api/cw_package/add', { form = form_ })._then(function(r)
+    self.http:request('/api/cw_package/add', { form = form_ })._then(function(r)
         if -1 ~= tonumber(r.code) and r.data then
             print(package_name .. ' add success ,with git_source:' .. git_source)
         else
@@ -56,22 +55,23 @@ function m:_install(data)
     end
 end
 
-function m:search(key, is_install)
+function m:search(key, callback)
     if is_install then
-        if str_index(key, '/') < 1 then
-            print('install a package ,must full path like:oshine/cw_device')
+        if _str_index(key, '/') < 1 then
+            print('install a package ,must full path like:oshine/device')
             return
         end
     end
 
-    http:request('/api/cw_package/search', { form = { package_name = key } })._then(function(r)
+    self.http:request('/api/package/search', { form = { package_name = key } })._then(function(r)
         if -1 ~= tonumber(r.code) and r.data then
             if #r.data > 0 then
                 -- install [安装]
-                if is_install then
-                    self:_install(r.data)
+                if callback then
+                    callback(r.data)
                     return
                 end
+
                 for _, v in pairs(r.data) do
                     print(v.name, v.title, v.port, v.git_source, v.install_times, v.platform, v.remark)
                 end
