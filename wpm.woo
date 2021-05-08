@@ -1,11 +1,11 @@
 -- Author: liyanxi
 -- Email:  liyanxi_rhett@outlook.com
 
--- when the install this plugs ,the init.woo will be run one times.
+-- when install this plugs ,the init.woo will be run one times.
 
---https://gitee.com/oshine/cwm/raw/master/init.woo
+--https://gitee.com/oshine/wpm/raw/master/init.woo
 
---curl https://gitee.com/oshine/cwm/raw/master/init.woo  -s
+--curl https://gitee.com/oshine/wpm/raw/master/init.woo  -s
 
 --print('dir:==', dir(''))
 --print(_DIR)
@@ -13,24 +13,24 @@
 
 local table = table
 
-install_dir = _home() .. '/cwm'
+install_dir = _env('WPM_PATH') or _home() .. '/wpm'
 
-package.path = install_dir .. '/?.cw;' .. package.path .. ';'
+package.path = install_dir .. '/?.woo;' .. package.path .. ';'
 
-local conf = require('oshine.cwm@:conf.conf')
-local trs = require('oshine.cwm@:conf.trs')
+local conf = require('oshine.wpm@:conf.conf')
+local trs = require('oshine.wpm@:conf.trs')
 local lan = conf.language
 
 print("package.path:===", package.path)
 
 local args1 = _args()
 table.remove(args1, 1)
-if os() == 'windows' then
-    if args1[1] == 'cwm' then
+if _os() == 'windows' then
+    if args1[1] == 'wpm' then
         table.remove(args1, 1)
     end
 else
-    -- handler for cmdline [cwm cmd oshine/cw_rename rename]
+    -- handler for cmdline [wpm cmd oshine/rename rename]
     if #args1 > 2 then
         local r = require(args1[2] .. '.cmd.' .. args1[3])
         local p = {}
@@ -48,10 +48,10 @@ else
     return
 end
 
-print('CWM get real args:===', _json_encode(args1))
+print('WPM get real args:===', _json_encode(args1))
 
 if _in_array(args1[1], { 'install', '-i', 'i' }) then
-    require('oshine.cwm@:installer'):new(args1[2] or _pwd()):install()
+    require('oshine.wpm@:installer'):new(args1[2] or _pwd()):install()
     return
 end
 
@@ -61,46 +61,49 @@ any_type = nil
 
 capture:catch('login', function(login_c)
     print('login ready>>>')
-    local member = require('oshine.cwm@:api.member'):new()
+    local member = require('oshine.wpm@:api.member'):new()
     local email = login_c:catchNext()
     member:login(email)
-end):catch('logout', function()
+end)   :catch('logout', function()
     print('logout ...')
-    require('oshine.cwm@:api.member'):new():logout()
-end):catch('install', function(c)
+    require('oshine.wpm@:api.member'):new():logout()
+end)   :catch('install', function(c)
     c:catch('plugs', function()
-        -- install self , just copy self folder to cwm package folder make sure you can load the lib anywhere
-        -- install dir is [~/username/cwm/]
-        require('oshine.cwm@:installer'):new(args1[3] or _pwd()):install_plugs()
+        -- install self , just copy self folder to wpm package folder make sure you can load the lib anywhere
+        -- install dir is [~/username/wpm/]
+        require('oshine.wpm@:installer'):new(args1[3] or _pwd()):install_plugs()
     end)
-end):catch('send', function(c, is_show_help)
+end)   :catch('send', function(c, is_show_help)
     if is_show_help then
-        return [[cwm send his]]
+        return [[wpm send his]]
     end
 
     -- 发送文件给好友
-    c:catch('user', function(user_c)
+    c   :catch('user', function(user_c)
         local user = user_c:catchNext() --or user_c:catchArg({ '-u', '--user' })
         local file = user_c:catchNextAll() --or user_c:catchArg({ '-f', '--file' })
     end):catch({ 'his', 'history' }, function()
     end):catch({ 'list', 'ls' }, function()
     end):catch({ 'que', 'queue' }, function()
     end):run()
-end):catch({ 'pro', 'program' }, function()
-end):catch({ 'conf', 'config' }, function()
-end):catch({ 'storage' }, function() -- local storage/本地存储命令行
-end):catch({ 'article', 'art' }, function()
-end):catch({ 'fav', 'favorite' }, function()
-end):catch({ 'clo', 'cloud' }, function() -- cloud storage/云存储，oss|disk
-end):catch('hook', function()
+end)   :catch({ 'pro', 'program' }, function()
+end)   :catch({ 'conf', 'config' }, function()
+end)   :catch({ 'storage' }, function()
+    -- local storage/本地存储命令行
+end)   :catch({ 'article', 'art' }, function()
+end)   :catch({ 'fav', 'favorite' }, function()
+end)   :catch({ 'clo', 'cloud' }, function()
+    -- cloud storage/云存储，oss|disk
+end)   :catch('hook', function()
     -- toggle hook，can be all resources hook,like article,file,picture,video,audio... [触发钩子,各种资源钩子，文章/文件/图片/视频/音频/...：
-    -- cwm hook oshine/177821
-end):catch('api', function()
-    -- cwm api storage exchange 100GB
-end):catch('check', function() -- check all installed plug's status/检查所有的已经安装的plugs的运行状态
-end):catch('status', function(c)
+    -- wpm hook oshine/177821
+end)   :catch('api', function()
+    -- wpm api storage exchange 100GB
+end)   :catch('check', function()
+    -- check all installed plug's status/检查所有的已经安装的plugs的运行状态
+end)   :catch('status', function(c)
     --c:trgger('pakcage.status')
-end):catch('package', function(package_c, is_show_help)
+end)   :catch('package', function(package_c, is_show_help)
     if is_show_help then
         return trs[lan]['']
     end
@@ -108,7 +111,7 @@ end):catch('package', function(package_c, is_show_help)
     local action = package_c:catchNext()
     if action == 'local' then
         -- exec local cmd line
-        local pac = require('oshine.cwm@:local_parse.package'):new()
+        local pac = require('oshine.wpm@:local_parse.package'):new()
         action = package_c:catchNext()
         if action == 'search' then
             pac:search()
@@ -118,7 +121,7 @@ end):catch('package', function(package_c, is_show_help)
         return
     end
 
-    local pac = require('oshine.cwm@:api.package'):new()
+    local pac = require('oshine.wpm@:api.package'):new()
     if action == 'add' then
         local package_name = package_c:catchNext()
         local git_source = package_c:catchNext()
@@ -129,20 +132,20 @@ end):catch('package', function(package_c, is_show_help)
     elseif action == 'list' then
         pac:status()
     end
-end):catch('demo', function()
--- cwm demo oshine/bitmap           // show all demo about oshine/bitmap
--- cwm demo oshine/bitmap circle    // run circle demo
+end)   :catch('demo', function()
+    -- wpm demo oshine/bitmap           // show all demo about oshine/bitmap
+    -- wpm demo oshine/bitmap circle    // run circle demo
 
-end):catch('config', function(package_c, is_show_help)
-    local key=package_c:catchNext()
-    local val=package_c:catchNext()
+end)   :catch('config', function(package_c, is_show_help)
+    local key = package_c:catchNext()
+    local val = package_c:catchNext()
     if key and val then
-        require('oshine.cwm@:utils.utils').configSet(key,val,function ()
-            conf = require('oshine.cwm@:conf.conf')
+        require('oshine.wpm@:utils.utils').configSet(key, val, function()
+            conf = require('oshine.wpm@:conf.conf')
         end)
     elseif is_show_help then
 
     end
-end):catch('search', function()
+end)   :catch('search', function()
     -- search article ,share hook...
-end):run()
+end)   :run()

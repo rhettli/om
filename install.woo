@@ -1,0 +1,110 @@
+-- 安装自己
+
+-- https://gitee.com/oshine/wpm/raw/master/installer.woo
+-- https://gitee.com/oshine/wpm/raw/v1.0.11/installer.woo
+
+--local host = 'https://woo.wooyri.com/wpm?ver='
+local host = 'http://127.0.0.1:8008/s/wpm?ver='
+
+local params = _args()
+
+if not params.lan then
+    while true do
+        params.lan = _readline('please choose install language(default [en] english)/请选择安装语言(默认[en]英文):[en/zh]')
+        if params.lan == '' then
+            params.lan = 'en'
+        end
+        if not _in_array(params.lan, { 'en', 'zh' }) then
+            print('only en or zh valid,trt again/只能输入en或者zh，请重试')
+        else
+            print(({ ['en'] = 'you choose english', ['zh'] = '你选择了中文' })[params.lan])
+            break
+        end
+    end
+end
+
+print(({ ['en'] = 'read to request server for wpm version', ['zh'] = '准备请求服务器可用的wpm版本' })[params.lan])
+
+local ver = _str_split(_ver())[1] * 1
+host = host .. ver
+local available, err = woo.http:new():get(host)
+
+if err ~= nil then
+    print(err)
+    return
+end
+
+available = available.body
+
+if available then
+    available = _json_decode(available)
+end
+
+print(({ ['en'] = 'there have a version[%s] valid',
+         ['zh'] = '这里有个版本[%s]可用' })[params.lan]:format(available.data.ver))
+
+if not params.install_dir then
+    params.install_dir = _readline(({ ['en'] = 'type install dir,default ${home}/wpm:',
+                                      ['zh'] = '请输入安装目录，默认 ${home}/wpm:' })[params.lan])
+    if params.install_dir == '' then
+        params.install_dir = _home() .. '/wpm'
+    end
+end
+
+local curr_env = _env('WPM_PATH')
+print(({ ['en'] = 'current WPM_PATH：%s,you choose install dir:%s',
+         ['zh'] = '当前 WPM_PATH：%s,你选择的安装地址：%s' })[params.lan]:format(curr_env, params.install_dir))
+
+if curr_env ~= params.install_dir then
+
+    if _os() == 'windows' then
+        -- 添加环境变量，判断windows和unix系统
+        _exec({ 'cmd', '/c', 'setx WPM_PATH ' .. params.install_dir })
+    else
+        _exec({ 'sh', '-c', 'echo export WPM_PATH=' .. params.install_dir .. ' >> ~/.bashrc && source ~/.bashrc' })
+    end
+    print(({ ['en'] = 'env variable not correct ,correct it now', ['zh'] = '环境变量不正确，已经修正' })[params.lan])
+else
+
+    print(({ ['en'] = 'env variable ok ,skip it', ['zh'] = '环境变量配置正确，跳过' })[params.lan])
+end
+
+local addr = available.data.addr
+
+if not addr then
+    print(({ ['en'] = 'server response err', ['zh'] = '服务器返回不正确' })[params.lan])
+    return
+end
+
+local addrs = _str_split(addr, '|')
+for i, addr_host in pairs(addrs) do
+
+    if _str_index(addr, 'gitee.com/') ~= -1 then
+        -- https://gitee.com/oshine/wpm/repository/archive/v1.0.11.zip
+        -- https://gitee.com/oshine/wpm/repository/archive/v1.0.11.zip?ref=v1.0.11&sha=fbaebe69d0e33c243f5c40a63cf8af26cb044b45&format=zip&captcha_type=yunpian&token=938e763645e446f78190ae5047f357b1&authenticate=784120e1cf514f91ac01d8251a81c696
+        addr_host = addr_host .. '/repository/archive/v' .. available.data.ver .. '.zip'
+    elseif _str_index(addr, 'github.com/') ~= -1 then
+
+    end
+
+    print(({ ['en'] = 'start download from:%s',
+             ['zh'] = '开始下载：%s' })[params.lan]:format(addr_host))
+    _wget('wpm.zip', addr_host,
+            { cookies = {  }, headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os() .. '/woo)' } },
+            function(current, total)
+                print(current, total)
+            end)
+    break
+end
+
+print(({ ['en'] = 'finish download,start unzip...',
+         ['zh'] = '下载完成开始解压...' })[params.lan])
+
+local unzip_res = _zip('unzip', 'wpm.zip', params.install_dir .. '/')
+if unzip_res == true then
+    print(({ ['en'] = 'unzip success，install finish',
+             ['zh'] = '解压成功，安装完毕' })[params.lan])
+else
+    print(({ ['en'] = 'unzip fail:%s',
+             ['zh'] = '解压失败:%s' })[params.lan]:format(unzip_res))
+end

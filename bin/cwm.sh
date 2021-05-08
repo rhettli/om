@@ -4,4 +4,4 @@
 
 
 
-${CW_PATH}/cw   %CWM_PATH%\..\cwm.cw  %allparam%
+${CW_PATH}/cw   %CWM_PATH%\..\wpm.WOO  %allparam%

@@ -1,20 +1,20 @@
 local dir = _DIR
 local work_dir = ''
 local yml
-local os = os()
+local os = _os()
 local install_dir
 local class_installer = {}
 
 function class_installer:new (work_dir_)
     work_dir = work_dir_
 
-    if not file_exist(work_dir_ .. '/package.lua') then
+    if not _file_exist(work_dir_ .. '/package.lua') then
         out('package.yml lose,this not a correct package')
         return false
     end
 
     print('start parse:', work_dir_ .. '/package.yml')
-    local pStr = file_get_contents(work_dir_ .. '/package.lua')
+    local pStr = _file_save(work_dir_ .. '/package.lua')
 
     if not pStr then
         print('parse fail,check syntax:', err)
@@ -25,7 +25,6 @@ function class_installer:new (work_dir_)
     local conf = require('oshine.cwm.conf')
     install_dir = conf.install_dir
 
-    print(json_encode({ l = 123, gg = 12 }))
     print("package parse done:==", json_encode(yml))
 
     if not yml.name then
@@ -39,8 +38,8 @@ function class_installer:new (work_dir_)
         return self
     end
 
-    for _, v in pairs(str_split(yml.platform, " ")) do
-        if trim(v) == os then
+    for _, v in pairs(_str_split(yml.platform, " ")) do
+        if _trim(v) == os then
             return self
         end
     end
@@ -96,8 +95,8 @@ function class_installer:install_plugs  ()
         print('file callback:===', file, is_dir)
         if str_index(file, '.lua') == #file - #'.lua' then
             if not is_dir then
-                local real_file = str_split(str_replace(file, '\\', '/'), '/')
-                local name = str_split(real_file[#real_file], '.')[1]
+                local real_file = _str_split(str_replace(file, '\\', '/'), '/')
+                local name = _str_split(real_file[#real_file], '.')[1]
                 local origin_name = name
                 if os == 'windows' then
                     -- windows mcd
@@ -105,16 +104,16 @@ function class_installer:install_plugs  ()
                         name = 'windows.' .. name
                     end
                     -- cwm cmd oshine/bitmap check
-                    file_put_contents(install_dir .. '/bin/' .. origin_name .. '.cmd', '@echo off \n::Generate by cwm ,do not modify this file \n' ..
+                    _file_save(install_dir .. '/bin/' .. origin_name .. '.cmd', '@echo off \n::Generate by cwm ,do not modify this file \n' ..
                             'cwm cmd ' .. yml.name .. ' ' .. name)
                 elseif os == 'linux' or os == 'drawin' then
                     -- linux and mac cmd
-                    if str_index(file, 'linux') > -1 then
+                    if _str_index(file, 'linux') > -1 then
                         name = 'linux.' .. name
-                    elseif str_index(file, 'drawin') > -1 then
+                    elseif _str_index(file, 'drawin') > -1 then
                         name = 'drawin.' .. name
                     end
-                    file_put_contents(install_dir .. '/bin/' .. origin_name .. '.sh', '#Generate by cwm ,do not modify this file \n' ..
+                    _file_save(install_dir .. '/bin/' .. origin_name .. '.sh', '#Generate by cwm ,do not modify this file \n' ..
                             'cwm cmd ' .. yml.name .. ' ' .. name)
                 end
             end
@@ -126,7 +125,7 @@ function class_installer:install_plugs  ()
 end
 
 function class_installer:install()
-    local cwm_path = env('CWM_PATH')
+    local cwm_path = env('WPM_PATH')
     print('cwm_path:===', cwm_path)
     local package = require('package')
     for i, v in pairs(package.dependencies) do
