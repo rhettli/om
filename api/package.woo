@@ -1,4 +1,4 @@
-local m = { http = require('oshine.cwm.api.promise'):new() }
+local m = { http = require('om.api.promise'):new() }
 
 function m:new()
     return self
@@ -63,7 +63,7 @@ function m:search(key, callback)
         end
     end
 
-    self.http:request('/api/package/search', { form = { package_name = key } })._then(function(r)
+    self.http:request('/api/package/search', { form = { package_name = key, os = _os() } })._then(function(r)
         if -1 ~= tonumber(r.code) and r.data then
             if #r.data > 0 then
                 -- install [安装]

@@ -1,10 +1,10 @@
 -- config model
 
 
-local dir = _home() .. '/cwm/'
+
 return {
-    storage_dir = dir .. '/storage', -- cwm install dir / cwm 安装目录
-    install_dir = dir, -- cwm install dir / cwm 安装目录
-    language = 'en', -- en [english] or zh [中文]
+
+    install_dir = _env('om_PATH') or _home() .. '/om', -- cwm install dir / cwm 安装目录
+    language = 'zh', -- en [english] or zh [中文]
     api_host = 'http://127.0.0.1:8008'
 }

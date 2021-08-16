@@ -1,17 +1,17 @@
 -- 安装自己
 
--- https://gitee.com/oshine/wpm/raw/master/installer.woo
--- https://gitee.com/oshine/wpm/raw/v1.0.11/installer.woo
+-- https://gitee.com/oshine/om/raw/master/installer.woo
+-- https://gitee.com/oshine/om/raw/v1.0.11/installer.woo
 
---local host = 'https://woo.wooyri.com/wpm?ver='
-local host = 'http://127.0.0.1:8008/s/wpm?ver='
+--local host = 'https://woo.wooyri.com/om?ver='
+local host = 'http://127.0.0.1:8008/s/om?ver='
 
 local params = _args()
 
 if not params.lan then
     while true do
-        params.lan = _readline('please choose install language(default [en] english)/请选择安装语言(默认[en]英文):[en/zh]')
-        if params.lan == '' then
+        --params.lan = _readline('please choose install language(default [en] english)/请选择安装语言(默认[en]英文):[en/zh]')
+        if not params.lan then
             params.lan = 'en'
         end
         if not _in_array(params.lan, { 'en', 'zh' }) then
@@ -23,9 +23,9 @@ if not params.lan then
     end
 end
 
-print(({ ['en'] = 'read to request server for wpm version', ['zh'] = '准备请求服务器可用的wpm版本' })[params.lan])
+print(({ ['en'] = 'read to request server for om version', ['zh'] = '准备请求服务器可用的om版本' })[params.lan])
 
-local ver = _str_split(_ver())[1] * 1
+local ver = _str_sub(_ver(), 0, 4)
 host = host .. ver
 local available, err = woo.http:new():get(host)
 
@@ -36,86 +36,103 @@ end
 
 available = available.body
 
-if available then
+if _is_valid(available) then
     available = _json_decode(available)
+else
+    print('can not access network')
+    os.exit(-1)
 end
 
-print(({ ['en'] = 'there have a version[%s] valid',
-         ['zh'] = '这里有个版本[%s]可用' })[params.lan]:format(available.data.ver))
+print(({ ['en'] = 'there have the version[%s] valid',
+         ['zh'] = '这里有版本[%s]可用' })[params.lan]:format(available.data.ver))
 
 if not params.install_dir then
-    params.install_dir = _readline(({ ['en'] = 'type install dir,default ${home}/wpm:',
-                                      ['zh'] = '请输入安装目录，默认 ${home}/wpm:' })[params.lan])
-    if params.install_dir == '' then
-        params.install_dir = _home() .. '/wpm'
+    --params.install_dir = _readline(({ ['en'] = 'type install dir,default ${home}/om:',
+    --                                  ['zh'] = '请输入安装目录，默认 ${home}/om:' })[params.lan])
+    if not params.install_dir then
+        params.install_dir = _home() .. '/om'
     end
 end
 
-local curr_env = _env('WPM_PATH')
-print(({ ['en'] = 'current WPM_PATH：%s,you choose install dir:%s',
-         ['zh'] = '当前 WPM_PATH：%s,你选择的安装地址：%s' })[params.lan]:format(curr_env, params.install_dir))
+function downl()
+    local curr_env = _env('om_PATH')
+    print(({ ['en'] = 'current om_PATH：%s,you choose install dir:%s',
+             ['zh'] = '当前 om_PATH：%s,你选择的安装地址：%s' })[params.lan]:format(curr_env, params.install_dir))
 
-if curr_env ~= params.install_dir then
+    if curr_env ~= params.install_dir then
 
-    if _os() == 'windows' then
-        -- 添加环境变量，判断windows和unix系统
-        _exec({ 'cmd', '/c', 'setx WPM_PATH ' .. params.install_dir })
+        if _os() == 'windows' then
+            -- 添加环境变量，判断windows和unix系统
+            _exec({ 'cmd', '/c', 'setx om_PATH ' .. params.install_dir })
+        else
+            _exec({ 'sh', '-c', 'echo export om_PATH=' .. params.install_dir .. ' >> ~/.bashrc && source ~/.bashrc' })
+        end
+        print(({ ['en'] = 'env variable not correct ,correct it now', ['zh'] = '环境变量不正确，已经修正' })[params.lan])
     else
-        _exec({ 'sh', '-c', 'echo export WPM_PATH=' .. params.install_dir .. ' >> ~/.bashrc && source ~/.bashrc' })
-    end
-    print(({ ['en'] = 'env variable not correct ,correct it now', ['zh'] = '环境变量不正确，已经修正' })[params.lan])
-else
 
-    print(({ ['en'] = 'env variable ok ,skip it', ['zh'] = '环境变量配置正确，跳过' })[params.lan])
-end
-
-local addr = available.data.addr
-
-if not addr then
-    print(({ ['en'] = 'server response err', ['zh'] = '服务器返回不正确' })[params.lan])
-    return
-end
-
-local addrs = _str_split(addr, '|')
-for i, addr_host in pairs(addrs) do
-
-    if _str_index(addr, 'gitee.com/') ~= -1 then
-        -- https://gitee.com/oshine/wpm/repository/archive/v1.0.11.zip
-        -- https://gitee.com/oshine/wpm/repository/archive/v1.0.11.zip?ref=v1.0.11&sha=fbaebe69d0e33c243f5c40a63cf8af26cb044b45&format=zip&captcha_type=yunpian&token=938e763645e446f78190ae5047f357b1&authenticate=784120e1cf514f91ac01d8251a81c696
-        addr_host = addr_host .. '/repository/archive/v' .. available.data.ver .. '.zip'
-    elseif _str_index(addr, 'github.com/') ~= -1 then
-        -- todo，install from github
-
+        print(({ ['en'] = 'env variable ok ,skip it', ['zh'] = '环境变量配置正确，跳过' })[params.lan])
     end
 
-    print(({ ['en'] = 'start download from:%s',
-             ['zh'] = '开始下载：%s' })[params.lan]:format(addr_host))
-    _wget('wpm.zip', addr_host,
-            { cookies = {  }, headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os() .. '/woo)' } },
-            function(current, total)
-                print(current, total)
-            end)
-    break
+    local addr = available.data.addr
+
+    if not addr then
+        print(({ ['en'] = 'server response err', ['zh'] = '服务器返回不正确' })[params.lan])
+        return
+    end
+
+    local addrs = _str_split(addr, '|')
+    for i, addr_host in pairs(addrs) do
+
+        if _str_index(addr, 'gitee.com/') ~= -1 then
+            -- https://gitee.com/oshine/om/repository/archive/v1.0.11.zip
+            -- https://gitee.com/oshine/om/repository/archive/v1.0.11.zip?ref=v1.0.11&sha=fbaebe69d0e33c243f5c40a63cf8af26cb044b45&format=zip&captcha_type=yunpian&token=938e763645e446f78190ae5047f357b1&authenticate=784120e1cf514f91ac01d8251a81c696
+            addr_host = addr_host .. '/repository/archive/v' .. available.data.ver .. '.zip'
+        elseif _str_index(addr, 'github.com/') ~= -1 then
+            -- todo，install from github
+
+        end
+
+        print(({ ['en'] = 'start download from:%s',
+                 ['zh'] = '开始下载：%s' })[params.lan]:format(addr_host))
+        _wget('om.zip', addr_host,
+                { cookies = {  }, headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. ')' } },
+                function(current, total)
+                    print(current, total)
+                end)
+        break
+    end
+
+    print(({ ['en'] = 'finish download,start unzip...',
+             ['zh'] = '下载完成开始解压...' })[params.lan])
+    local exit = _file_exist(params.install_dir .. '/om')
+    print('exit:', exit, params.install_dir .. '/om')
+    if exit then
+        local r = (({ ['en'] = 'om already install,are you sure replace it?(y/n):',
+                      ['zh'] = 'om 已经安装，是否替换？' })[params.lan])
+
+        if _readline(r) ~= 'y' then
+            return
+        end
+        print(({ ['en'] = 'delete old om folder...',
+                 ['zh'] = '删除就的om文件夹...' })[params.lan])
+        _rm(params.install_dir .. '/om')
+    end
+
+    local unzip_res = _zip('unzip', 'om.zip', params.install_dir .. '/')
+    if unzip_res ~= true then
+        print(({ ['en'] = 'unzip fail:%s',
+                 ['zh'] = '解压失败:%s' })[params.lan]:format(unzip_res))
+        return
+    end
 end
 
-print(({ ['en'] = 'finish download,start unzip...',
-         ['zh'] = '下载完成开始解压...' })[params.lan])
+--downl()
 
-local unzip_res = _zip('unzip', 'wpm.zip', params.install_dir .. '/')
-if unzip_res ~= true then
-    print(({ ['en'] = 'unzip fail:%s',
-             ['zh'] = '解压失败:%s' })[params.lan]:format(unzip_res))
-    return
-end
-
-print(({ ['en'] = 'unzip success，install wpm dependencies package',
-         ['zh'] = '解压成功，安装wpm依赖包' })[params.lan])
+print(({ en = 'unzip success，install om dependencies package',
+         zh = '解压成功，安装om依赖包' })[params.lan])
 
 package.path = params.install_dir .. '/?.woo'
 
-local installer = require('wpm/installer')
+require('om/installer'):new(params.install_dir .. '/om'):install({ lan = params.lan })
 
-installer:new(params.install_dir):install()
-
-print(({ ['en'] = 'success',
-         ['zh'] = '成功' })[params.lan])
+print(({ ['en'] = 'success', ['zh'] = '成功' })[params.lan])

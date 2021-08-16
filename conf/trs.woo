@@ -6,9 +6,25 @@ return {
         package  add package_name git_source title  [exp:package add oshine/bitmap gitee.com/oshine.bitmap "A 2d drawer"]
         package  search local bitmap
         package  list local
-        ]]
+        ]],
+        ['installer_choose_tags'] = 'start match tags branch...',
+        ['installer_install_dependencies'] = 'start install dependencies:%s,where:%s,start request server if it exists',
+        ['installer_choose_result_master'] = 'no tags branch matched,install master branch,source addr:%s',
+        installer_choose_result_tags = 'match a tag branch:%s,source addr:%s',
+        om_path_nil = 'env om_path is nil,change a console to do it again or restart you computer',
+        install_where_nil = "[%s]don't know where to install ,use default `local`",
+        installer_not_find_pkg = "not find pkg:[%s]",
+        unzip_fail = "[%s]unzip fail:[%s]",
     },
     ['zh'] = {
+        ['installer_choose_tags'] = '开始匹配tags分支...',
+        ['installer_install_dependencies'] = '开始安装依赖:%s，安装位置%s,开始请求服务器是否存在当前依赖包',
+        ['installer_choose_result_master'] = '没有分支tags匹配，安装默认master分支,源码地址:%s',
+        installer_choose_result_tags = '匹配到一个tag分支:%s,源码地址:%s',
+        om_path_nil = '取环境变量om_PATH结果为空，请换个控制台重试，或重启电脑在试试',
+        install_where_nil = "[%s]不知道安装在哪里，使用默认 `local`",
+        installer_not_find_pkg = "没有找到pkg:%s",
+        unzip_fail = "[%s]解压失败:[%s]",
         ['package_help'] = [[
         package  search bitmap
         package  list

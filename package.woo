@@ -1,16 +1,16 @@
 --author: liyanxi
 
 return {
-    -- oshine is member name ,cwm is package name
-    ['package_name'] = 'oshine/cwm',
+    -- oshine is member name ,om is package name
+    ['package_name'] = 'oshine/om',
     -- where should this package install,[default:local]
     self_install = 'global',
 
     -- ['package_name'] = 'version'
     -- version must like :? , 1.?, 2.3.?
     dependencies = {
-        ['oshine/cw_any_type'] = '?|global',
-        ['oshine/cw_args_capture'] = '?|global'
+        ['oshine/woo_any_type'] = '?|global',
+        ['oshine/woo_args'] = '?|global'
     },
     -- platform default is all platform
     platform = 'all' or 'windows drawn linux',
@@ -18,6 +18,6 @@ return {
 
     --port = '12225,12224',
 
-    remark='install package in any platform at any time',
-    title='Coder Wooyri package manager',
+    remark = { zh = 'woo语言官方包管理器', en = 'install package in any platform at any time' },
+    title = 'Coder Wooyri package manager',
 }

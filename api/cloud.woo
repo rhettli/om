@@ -1,5 +1,5 @@
 local class_cloud_file = {}
-local http = require('oshine.cwm.api.promise'):new()
+local http = require('om.api.promise'):new()
 
 function class_cloud_file:new()
     return self
