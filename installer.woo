@@ -189,6 +189,8 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
     end
 
     self:_after_install(pkg, ver)
+    self:_env_path_add(pkg, ver)
+    self:_export_cmd(pkg, ver)
 end
 
 --- 安装成功之后调用
@@ -203,7 +205,17 @@ function class_installer:_after_install(pkg, ver)
     end
 end
 
--- 选择tags版本
+--- 把需要加入path的环境变量处理下
+function class_installer:_env_path_add(pkg, ver)
+
+end
+
+--- 全局导出cmd命令
+function class_installer:_export_cmd(pkg, ver)
+
+end
+
+--- 选择tags版本
 --- @param ver string @1.? or ?
 function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pkg)
     print('choose tags:===', tags_path, ver, where, download_prefix)

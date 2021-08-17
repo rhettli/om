@@ -4,7 +4,7 @@ return {
     --- oshine is member name ,om is package name
     ['package_name'] = 'oshine/om',
     --- where should this package install,[default:local]
----
+    ---
     self_install = 'global',
 
     --- ['package_name'] = 'version'
@@ -23,8 +23,9 @@ return {
     title = 'Coder Wooyri package manager',
 
     --- 导出cmd文件夹内的woo文件用作全局命令
-    export = {},
+    --- 导出之后可以全局执行rename命令，否则：om rename
+    --export = { rename = 'rename' },
 
     --- 自动加入环境变量
-    env = { 'bin', OM_PATH = '' }
+    env_path = { 'bin' }
 }

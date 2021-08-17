@@ -1,38 +1,38 @@
-# woo:wpm 包管理器(开发中，目前暂不可用)
+# woo:om 包管理器(开发中，目前暂不可用)
 
-**[[english]](https://gitee.com/oshine/wpm/blob/master/README.md)**
+**[[english]](https://gitee.com/oshine/om/blob/master/README.md)**
 
 #### 介绍 
 ```
-1.wpm 可以帮你管理所有的cw包，已经创建新的cwm包
-2.wpm 可创建替代unix系统的命令行工具
-3.wpm 可以收藏您喜欢的文件图片文字等
-4.wpm 可以把您喜欢的文件分享给朋友
-5.wpm 提供了一个网盘，默认1G空间
+1.om 可以帮你管理所有的cw包，已经创建新的cwm包
+2.om 可创建替代unix系统的命令行工具
+3.om 可以收藏您喜欢的文件图片文字等
+4.om 可以把您喜欢的文件分享给朋友
+5.om 提供了一个网盘，默认1G空间
 ```
 
 #### 【安装教程】
 [请注意]：
-`安装wpm之前必须先安装woo语言`
+`安装om之前必须先安装woo语言`
 
-# **1.为Windows安装wpm** 
-## 如果你是win10 或安装了powershell,可以在powershell中使用woo语言来安装wpm
->(支持在cmd和git bash中使用此脚本来安装wpm)
+# **1.为Windows安装om** 
+## 如果你是win10 或安装了powershell,可以在powershell中使用woo语言来安装om
+>(支持在cmd和git bash中使用此脚本来安装om)
 安装前请确认woo.exe可执行文件已加入环境变量，否则请使用绝对路径
 ```
-woo.exe -r "print(woo.http:new():get('https://wooyri.com/s/wpm?v=latest').body)" | woo.exe -r
+woo.exe -r "print(woo.http:new():get('https://wooyri.com/s/om?v=latest').body)" | woo.exe -r
 ```
 
-# **2.为 drawin(mac) 和 linux 系统安装wpm** 
+# **2.为 drawin(mac) 和 linux 系统安装om** 
 ```shell
-woo.exe -r "print(woo.http:new():get('https://wooyri.com/s/wpm?v=latest').body)" | woo.exe -r
+woo.exe -r "print(woo.http:new():get('https://wooyri.com/s/om?v=latest').body)" | woo.exe -r
 # 或者
-curl -fsSl https://wooyri.com/s/wpm?v=latest | woo -r
+curl -fsSl https://wooyri.com/s/om?v=latest | woo -r
 ```
 
-#  **3.新建wpm包并且提交供他人安装** 
-**wpm包新建包命令**
-`wpm create package_name`
+#  **3.新建om包并且提交供他人安装** 
+**om包新建包命令**
+`om create package_name`
 
 #### 1.如果你的包是供他人安装，那么package.lua中的require可以忽略，如果不可用作为资源包供他人代码引用，那么必须把 require设置为false 或 0
 ```lua
