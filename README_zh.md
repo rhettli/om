@@ -46,7 +46,7 @@ return {
     dependencies = {
         ['oshine/cw_device'] = '?',
         ['oshine/cw_any_type'] = '?|local',
-         ['oshine/***'] = '1.?|download'，
+         ['oshine/***'] = '1.?|download',
         ['oshine/cw_args_capture'] = '1.2?|global',
     },
 

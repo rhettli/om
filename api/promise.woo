@@ -3,8 +3,9 @@
 -- Todo ,read trs.cw form /conf/trs.cw
 local m = { host = 'http://127.0.0.1:8008' }
 
-function m:new()
+function m:new(conf)
     self._http = woo.http:new()
+    self.conf=conf
     return self
 end
 
@@ -17,7 +18,7 @@ function m:request(path, params)
         end
     end
 
-    local sid = _cat(require('om.conf.conf').install_dir .. 'sid', true) or ''
+    local sid = _cat(self.conf.install_dir .. 'sid', true) or ''
 
     params.form = params.form .. 'sid=' .. sid
 

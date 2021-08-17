@@ -15,7 +15,7 @@
 
 local table = table
 
-install_dir = _env('WM_PATH') or _home() .. '/om'
+install_dir = _env('OM_PATH') or _home() .. '/om'
 
 package.path = install_dir .. '/?.woo;' .. package.path .. ';'
 

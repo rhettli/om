@@ -25,7 +25,8 @@ function class_installer:new (work_dir_)
     print('install new...', work_dir_)
     work_dir = work_dir_
 
-    local pkg_dir = _join(work_dir_, '/package.woo')
+    local pkg_dir = work_dir_ .. '/package.woo'
+    print('pkg dir:', pkg_dir)
     if not _file_exist(pkg_dir) then
         _out('package.woo lose,this not a correct package')
         return false
@@ -40,12 +41,12 @@ function class_installer:new (work_dir_)
     end
 
     self.yml = loadstring(pStr)()
-    self._conf = require('om.conf.conf')
-    self._trs = require('om.conf.trs')[self._conf.language]
+    self._conf = require('oshine/om@1.?:conf/conf')
+    self._trs = require('oshine/om@1.?:conf/trs')[self._conf.language]
 
     print("package parse done:==", _json_encode(self.yml))
 
-    assert(_is_valid(self.package_name), 'no [package_name] in package.woo,it is not a correct package.')
+    assert(_is_valid(self.yml.package_name), 'no [package_name] in package.woo,it is not a correct package.')
 
     print('current os:', os)
     print('package support platform :', self.yml.platform or 'mac windows linux')
@@ -130,44 +131,88 @@ function class_installer:install_plugs  ()
 
 end
 
+--- 下载tags版本
 --- @param ver string @1.? or ?
 function class_installer:_download_tags(branch_name, ver, where, pkg, download_prefix)
     local pkg_arr = _str_split(pkg, '/')
     local username = pkg_arr[1]
     local user_package_name = pkg_arr[2]
-    local path_name = self._conf.install_dir .. "/download/" .. branch_name .. '.zip'
-    -- https://gitee.com/oshine/murphy/repository/archive/v1.01.zip
-
-    local r = _wget(path_name, download_prefix, {
-        headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. ')' } })
-    if r then
-        if where == 'local' then
-            local unzip_res = _zip('unzip', path_name, './vendor/' .. pkg)
-            if unzip_res ~= true then
-                print(self._trs['unzip_fail']:format(path_name, unzip_res))
-                return
-            end
-            _mv('./vendor/' .. pkg .. username, './vendor/' .. pkg .. ver)
-        else
-            local unzip_res = _zip('unzip', path_name, self._conf.install_dir .. '/' .. pkg)
-            if unzip_res ~= true then
-                print(self._trs['unzip_fail']:format(path_name, unzip_res))
-                return
-            end
-            _mv(self._conf.install_dir .. '/' .. pkg .. username, './vendor/' .. pkg .. ver)
-        end
-
+    local download_dir = self._conf.install_dir .. "/.download/"
+    if not _file_exist(download_dir) then
+        print('下载缓存目录不存在，创建：', _mkdir(download_dir))
     end
 
+    local path_name = download_dir .. username .. '.' .. user_package_name .. '.' .. branch_name .. '.zip'
+    -- https://gitee.com/oshine/murphy/repository/archive/v1.01.zip
+
+    if not _file_exist(path_name) then
+        local r = _wget(path_name .. '_temp', download_prefix, {
+            headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. ')' } })
+        --if not r then
+        --    print('download fail:', download_prefix, '=>', path_name)
+        --    return
+        --end
+        print(r)
+        -- 下载完毕后，修改文件名
+        _mv(path_name .. '_temp', path_name)
+    else
+        print('use cache:', path_name)
+    end
+
+    local f = ''
+    if ver == '@' then
+        -- 安装master版本
+        f = 'master'
+    else
+        f = branch_name
+    end
+    ver = _ltrim(ver, 'v')
+
+    if where == 'local' then
+        -- 本地安装
+        local unzip_res = _zip('unzip', path_name, './vendor/' .. pkg)
+        if unzip_res ~= true then
+            print(self._trs['unzip_fail']:format(path_name, unzip_res))
+            return
+        end
+        _mv('./vendor/' .. pkg .. username, './vendor/' .. pkg .. f)
+    else
+        -- 全局安装
+        local unzip_res = _zip('unzip', path_name, self._conf.install_dir .. '/' .. pkg)
+        if unzip_res ~= true then
+            print(self._trs['unzip_fail']:format(path_name, unzip_res))
+            return
+        end
+        local p = self._conf.install_dir .. '/' .. pkg .. '/'
+        --print('change:===', p .. user_package_name .. '-' .. ver, p .. f)
+        _mv(p .. user_package_name .. '-' .. f, p .. ver)
+    end
+
+    self:_after_install(pkg, ver)
 end
 
+--- 安装成功之后调用
+function class_installer:_after_install(pkg, ver)
+    local v = ver
+    ver = ver == 'master' and '' or (ver .. '?')
+    local after = pcall(function()
+        return require(pkg .. '@' .. ver .. ':install/after')
+    end)
+    if after then
+        after.run(pkg, v, self._conf)
+    end
+end
+
+-- 选择tags版本
 --- @param ver string @1.? or ?
-function class_installer:_choose_tags(tags_path, ver, where, download_prefix)
+function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pkg)
+    print('choose tags:===', tags_path, ver, where, download_prefix)
     local r, e = woo.http:new():get(tags_path, {})
     print(self._trs['installer_choose_tags'])
     local re_ver = _str_replace(ver, '?', '.*')
     if not e then
         local res = _json_decode(r.body)
+        print('got tags list:===', _json_encode(res))
         if #res == 0 then
             -- choose master branch
             -- https://gitee.com/oshine/murphy/repository/archive/master.zip
@@ -177,22 +222,26 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix)
             elseif _str_index(download_prefix, self._prefix_github) ~= -1 then
                 download_prefix = download_prefix:format('heads/master')
             end
-            print(self._trs['installer_choose_result_master']:format(download_prefix))
+            print(self._trs['installer_choose_result_master']:format(download_prefix), '===')
 
-            self:_download_prefix('master', '@', where, download_prefix)
+            self:_download_tags('master', '@', where, pkg, download_prefix)
         else
             -- choose a match tags branch
             for _, v in pairs(res) do
                 local name
+                if 1 < _str_count(v.name, '.') then
+                    print('version named illegal,can only have one point symbol:' .. v.name, 'eg:v1.0123  v1.34001  v2.301')
+                    return
+                end
                 if _begin_with(v.name, 'v') then
                     name = _str_sub(v.name, 1) * 1
                 else
-                    name = v.name
+                    name = v.name * 1
                 end
-
-                if name then
-                    local rv = _re_match(name, re_ver)
-                    if #rv[1] > 1 and rv[1][1] == name then
+                print('got version:===', name, re_ver)
+                if name > 0 then
+                    local rv = _re_match('' .. name, re_ver)
+                    if rv[1] then
                         -- https://gitee.com/oshine/om/repository/archive/v1.011.zip
 
                         if _str_index(download_prefix, self._prefix_gitee) ~= -1 then
@@ -203,24 +252,23 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix)
 
                         print(self._trs['installer_choose_result_tags']:format(v.name, download_prefix))
 
-                        self:_download_prefix(v.name, v.name, where, download_prefix)
+                        self:_download_tags(v.name, v.name, where, pkg, download_prefix)
                         break
                     end
+                else
+                    print('version error,what fuck???? name err')
                 end
 
             end
         end
+
+    else
+        print('get tags list error:', e)
     end
 end
 
----@param param
-function class_installer:install(param)
-    local cwm_path = self._conf.install_dir
-    if not cwm_path then
-        print(self._trs['om_path_nil'])
-        return
-    end
-
+--- 安装依赖包根据 package.woo
+function class_installer:_install_pkg(param, is_self)
     for pkg, dep in pairs(self.yml.dependencies) do
         local install_where, install_version
         if _str_index(dep, '|') > -1 then
@@ -233,13 +281,15 @@ function class_installer:install(param)
                 install_version = sp[1]
             end
             install_where = install_where or 'local'
-            install_version = install_version or '*'
+            install_version = install_version or '?'
         end
 
-        local install_version_re = _str_replace(install_version, '?', '.*')
+        local install_version_re = _str_replace(install_version, '?', '.*?')
         local skip = false
+        _out(self._conf)
+        print('pkg:==', self._conf.install_dir, pkg, install_version_re)
         if install_where == 'local' then
-            -- if installed,juuuuust skip
+            -- if installed,juuuuust skipm
             _ls('./vendor/' .. pkg, function(i, v)
                 -- v.name = 1.124
                 -- v.name = @
@@ -252,14 +302,17 @@ function class_installer:install(param)
 
         elseif install_where == 'global' then
 
-            -- if installed,juuuuust skip
-            _ls(self._conf.install_dir .. '/' .. pkg, function(i, v)
-                local re_res = _re_match(v.name, install_version_re)
-                if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
-                    skip = true
-                    return true
-                end
-            end)
+            if _file_exist(self._conf.install_dir .. '/' .. pkg) then
+                -- if installed,juuuuust skip
+                _ls(self._conf.install_dir .. '/' .. pkg, function(v)
+                    print('已经存在目录：', self._conf.install_dir .. '/' .. pkg, _json_encode(v))
+                    local re_res = _re_match(v.name, install_version_re)
+                    if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
+                        skip = true
+                        return true
+                    end
+                end, true)
+            end
         else
             print('just global and local can be use')
             return
@@ -267,16 +320,18 @@ function class_installer:install(param)
 
         if not skip then
             print(self._trs['installer_install_dependencies']:format(install_where, install_version))
-            require('om/api.package'):new():search(pkg, function(data)
-                --_out(pkg .. ' find ok,install now...', data[1])
-                if data[1] then
+            print('start search pkg:', pkg)
+            require('oshine/om@' .. self._conf.v .. ':api/package'):new(self._conf):search(pkg, function(data)
+                _out(pkg .. ' find ok,install now...', data[1])
+                if not data[1] then
                     print(self._trs['installer_not_find_pkg']:format(pkg))
                     return
                 end
+
                 local git_source = data[1].git_source
                 local git_sources = _str_split(git_source, ',')
                 if #git_sources == 0 then
-                    print(self._trs['installer_not_find_pkg']:format(pkg))
+                    print(self._trs['installer_not_find_pkg']:format(pkg), '===')
                     return
                 end
 
@@ -287,7 +342,7 @@ function class_installer:install(param)
                     for _, v in pairs(git_sources) do
                         if _str_index(v, self._prefix_gitee) ~= -1 then
                             self:_choose_tags(self._api_host['gitee']:format(pkg), install_version,
-                                    install_where, self._download_zip_addr['gitee']:format(pkg))
+                                    install_where, self._download_zip_addr['gitee']:format(pkg, '%s'), pkg)
 
                             break
                         end
@@ -296,7 +351,7 @@ function class_installer:install(param)
                     for _, v in pairs(git_sources) do
                         if _str_index(v, self._prefix_github) ~= -1 then
                             self:_choose_tags(self._api_host['github']:format(pkg), install_version,
-                                    install_where, self._download_zip_addr['github']:format(pkg))
+                                    install_where, self._download_zip_addr['github']:format(pkg, '%s'), pkg)
                         end
                         break
                     end
@@ -305,10 +360,10 @@ function class_installer:install(param)
                     local v = git_sources[1]
                     if _str_index(v, self._prefix_github) ~= -1 then
                         self:_choose_tags(self._api_host['github']:format(pkg), install_version,
-                                install_where, self._download_zip_addr['github']:format(pkg))
+                                install_where, self._download_zip_addr['github']:format(pkg, '%s'), pkg)
                     elseif _str_index(v, self._prefix_gitee) ~= -1 then
                         self:_choose_tags(self._api_host['gitee']:format(pkg), install_version,
-                                install_where, self._download_zip_addr['gitee']:format(pkg))
+                                install_where, self._download_zip_addr['gitee']:format(pkg, '%s'), pkg)
                     end
                 end
 
@@ -317,322 +372,30 @@ function class_installer:install(param)
     end
 end
 
-return class_installer
-
---[[
-local dir = _DIR
-local work_dir = ''
-local os = _os()
-local install_dir
-local class_installer = { conf = nil, trs = nil, gitee_prefix = 'gitee.com/', github_prefix = 'github.com/' }
-
-function class_installer:new (work_dir_)
-    print('install new...', work_dir_)
-    work_dir = work_dir_
-
-    if not _file_exist(work_dir_ .. '/package.woo') then
-        _out('package.woo lose,this not a correct package')
-        return false
-    end
-
-    print('start parse:', work_dir_ .. '/package.woo')
-    local pStr = _cat(work_dir_ .. '/package.woo', true)
-
-    if not pStr then
-        print('parse fail,check syntax:', err)
-        return
-    end
-    self.yml = loadstring(pStr)()
-
-    self.conf = require('om.conf.conf')
-    self.trs = require('om.conf.trs')[self.conf.language]
-
-    print("package parse done:==", _json_encode(self.yml))
-
-    if not self.yml.package_name then
-        assert(false, 'no [package_name] in package.woo,it is not a correct package.')
-    end
-
-    print('current os:', os)
-    print('package support platform :', self.yml.platform or 'mac windows linux')
-    -- check platform
-    if not self.yml.platform or self.yml.platform == 'all' then
-        return self
-    end
-
-    for _, v in pairs(_str_split(self.yml.platform, " ")) do
-        if _trim(v) == os then
-            return self
-        end
-    end
-
-    assert(false, 'not support your os:' .. os)
-end
-
-function class_installer:yml_conf  ()
-    return self.yml
-end
-
-function class_installer:is_installed  ()
-    local ini = require('ini'):new()
-    local ok = ini.open(install_ini)
-    if not ok then
-        _out(false, 'can not open ini file,new one.')
-        return false
-    end
-
-    if ini:key('installed', self.yml.package_name) == self.yml.package_name then
-        _out('package:' .. self.yml.package_name .. ' already installed,', 'you can use -r to reinstall this package.')
-        return true
-    end
-end
-
-function class_installer:download  (source)
-
-end
-
-function class_installer:install_plugs  ()
-    -- check package.yml
-
-    print('copy start...')
-    -- before install
-    print(pcall(function()
-        local before = require('install.before')
-        if before then
-            before.run()
-        end
-    end))
-
-    local r, e = copy(work_dir, install_dir .. '/' .. self.yml.name)
-    print("copy:===", work_dir, install_dir .. '/' .. self.yml.name, r, e)
-    -- before install
-    pcall(function()
-        local after = require(self.yml.name .. '.install.after')
-        if after then
-            after.run()
-        end
-    end)
-    -- map cmd
-    local callback = function(file, is_dir)
-        print('file callback:===', file, is_dir)
-        if str_index(file, '.lua') == #file - #'.lua' then
-            if not is_dir then
-                local real_file = _str_split(str_replace(file, '\\', '/'), '/')
-                local name = _str_split(real_file[#real_file], '.')[1]
-                local origin_name = name
-                if os == 'windows' then
-                    -- windows mcd
-                    if str_index(file, 'windows') > -1 then
-                        name = 'windows.' .. name
-                    end
-                    -- cwm cmd oshine/bitmap check
-                    _file_save(install_dir .. '/bin/' .. origin_name .. '.cmd', '@echo off \n::Generate by cwm ,do not modify this file \n' ..
-                            'cwm cmd ' .. self.yml.name .. ' ' .. name)
-                elseif os == 'linux' or os == 'darwin' then
-                    -- linux and mac cmd
-                    if _str_index(file, 'linux') > -1 then
-                        name = 'linux.' .. name
-                    elseif _str_index(file, 'darwin') > -1 then
-                        name = 'darwin.' .. name
-                    end
-                    _file_save(install_dir .. '/bin/' .. origin_name .. '.sh', '#Generate by cwm ,do not modify this file \n' ..
-                            'cwm cmd ' .. self.yml.name .. ' ' .. name)
-                end
-            end
-        end
-    end
-
-    _ls(install_dir .. '/' .. self.yml.name .. '/cmd/', callback)
-
-end
-
---- @param ver string @1.? or ?
-function class_installer:_download_tags(branch_name, ver, where, pkg, download_prefix)
-    local pkg_arr = _str_split(pkg, '/')
-    local username = pkg_arr[1]
-    local user_package_name = pkg_arr[2]
-    local path_name = self.conf.install_dir .. "/download/" .. branch_name .. '.zip'
-    -- https://gitee.com/oshine/murphy/repository/archive/v1.01.zip
-
-    local r = _wget(path_name, download_prefix, {
-        headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. ')' } })
-    if r then
-        if where == 'local' then
-            local unzip_res = _zip('unzip', path_name, './vendor/' .. pkg)
-            if unzip_res ~= true then
-                print(self.trs['unzip_fail']:format(path_name, unzip_res))
-                return
-            end
-            _mv('./vendor/' .. pkg .. username, './vendor/' .. pkg .. ver)
-        else
-            local unzip_res = _zip('unzip', path_name, self.conf.install_dir .. '/' .. pkg)
-            if unzip_res ~= true then
-                print(self.trs['unzip_fail']:format(path_name, unzip_res))
-                return
-            end
-            _mv(self.conf.install_dir .. '/' .. pkg .. username, './vendor/' .. pkg .. ver)
-        end
-
-    end
-
-end
-
---- @param ver string @1.? or ?
-function class_installer:_choose_tags(tags_path, ver, where, download_prefix)
-    local r, e = woo.http:new():get(tags_path, {})
-    print(self.trs['installer_choose_tags'])
-    local re_ver = _str_replace(ver, '?', '.*')
-    if not e then
-        local res = _json_decode(r.body)
-        if #res == 0 then
-            -- choose master branch
-            -- https://gitee.com/oshine/murphy/repository/archive/master.zip
-
-            if _str_index(download_prefix, self.gitee_prefix) ~= -1 then
-                download_prefix = download_prefix:format('master')
-            elseif _str_index(download_prefix, self.github_prefix) ~= -1 then
-                download_prefix = download_prefix:format('heads/master')
-            end
-            print(self.trs['installer_choose_result_master']:format(download_prefix))
-
-            self:_download_prefix('master', '@', where, download_prefix)
-        else
-            -- choose a match tags branch
-            for _, v in pairs(res) do
-                local name
-                if _begin_with(v.name, 'v') then
-                    name = _str_sub(v.name, 1) * 1
-                else
-                    name = v.name
-                end
-
-                if name then
-                    local rv = _re_match(name, re_ver)
-                    if #rv[1] > 1 and rv[1][1] == name then
-                        -- https://gitee.com/oshine/om/repository/archive/v1.011.zip
-
-                        if _str_index(download_prefix, self.gitee_prefix) ~= -1 then
-                            download_prefix = download_prefix:format(v.name)
-                        elseif _str_index(download_prefix, self.github_prefix) ~= -1 then
-                            download_prefix = download_prefix:format('tags/' .. v.name)
-                        end
-
-                        print(self.trs['installer_choose_result_tags']:format(v.name, download_prefix))
-
-                        self:_download_prefix(v.name, v.name, where, download_prefix)
-                        break
-                    end
-                end
-
-            end
-        end
-    end
-end
-
-function class_installer:install()
-    local cwm_path = self.conf.install_dir
+--- 安装自己，或者某个包
+---@param param table
+---@param is_self boolean@是否是安装自己
+function class_installer:install(param, is_self)
+    local cwm_path = self._conf.install_dir
     if not cwm_path then
-        print(self.trs['om_path_nil'])
+        print(self._trs['om_path_nil'])
         return
     end
 
-    for pkg, dep in pairs(self.yml.dependencies) do
-        local install_where, install_version
-        if _str_index(dep, '|') > -1 then
-            local sp = _str_split(dep, "|")
-            if #sp == 2 then
-                install_where = sp[2]
-                install_version = sp[1]
-            else
-                print(self.trs['install_where_nil']:format(dep))
-                install_version = sp[1]
-            end
-            install_where = install_where or 'local'
-            install_version = install_version or '*'
-        end
-        local install_version_re = _str_replace(install_version, '?', '.*')
-        local skip = false
-        if install_where == 'local' then
-            -- if installed,juuuuust skip
-            _ls('./vendor/' .. pkg, function(i, v)
-                -- v.name = 1.124
-                -- v.name = @
-                local re_res = _re_match(v.name, install_version_re)
-                if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
-                    skip = true
-                    return true
-                end
-            end)
-
-        elseif install_where == 'global' then
-
-            -- if installed,juuuuust skip
-            _ls(self.conf.install_dir .. '/' .. pkg, function(i, v)
-                -- v.name = 1.124
-                -- v.name = @
-                local re_res = _re_match(v.name, install_version_re)
-                if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
-                    skip = true
-                    return true
-                end
-            end)
-        else
-            print('just global and local can be use')
-            return
-        end
-
-        if not skip then
-            print(self.trs['installer_install_dependencies']:format(install_where, install_version))
-            require('om/api.package'):new():search(pkg, function(data)
-                --_out(pkg .. ' find ok,install now...', data[1])
-                if data[1] then
-                    print(self.trs['installer_not_find_pkg']:format(pkg))
-                    return
-                end
-                local git_source = data[1].git_source
-                local git_sources = _str_split(git_source, ',')
-                if #git_sources == 0 then
-                    print(self.trs['installer_not_find_pkg']:format(pkg))
-                    return
-                end
-                local api_host = { gitee = 'https://gitee.com/api/v5/repos/%s/tags',
-                                   github = 'https://api.github.com/repos/%s/tags' }
-                local download_zip_addr = { gitee = 'https://gitee.com/%s/repository/archive/%s.zip',
-                                            github = 'https://github.com/%s/archive/refs/%s.zip' }
-                -- https://github.com/rust-lang/rust/archive/refs/tags/release-0.6.zip
-                -- https://github.com/rust-lang/rust/archive/refs/tags/1.38.0.zip
-                if self.conf.language == 'zh' and _str_index(git_source, self.gitee_prefix) ~= -1 then
-
-                    for i, v in pairs(git_sources) do
-                        if _str_index(v, self.gitee_prefix) ~= -1 then
-                            self:_choose_tags(api_host['gitee']:format(pkg), install_version,
-                                    install_where, download_zip_addr['gitee']:format(pkg))
-                        end
-                        break
-                    end
-                elseif self.conf.language == 'en' and _str_index(git_source, self.github_prefix) ~= -1 then
-                    for i, v in pairs(git_sources) do
-                        if _str_index(v, self.github_prefix) ~= -1 then
-                            self:_choose_tags(api_host['github']:format(pkg), install_version,
-                                    install_where, download_zip_addr['github']:format(pkg))
-                        end
-                        break
-                    end
-                else
-                    -- 随便使用第一个即可
-                    local v = git_sources[1]
-                    if _str_index(v, self.github_prefix) ~= -1 then
-                        self:_choose_tags(api_host['github']:format(pkg), install_version,
-                                install_where, download_zip_addr['github']:format(pkg))
-                    elseif _str_index(v, self.gitee_prefix) ~= -1 then
-                        self:_choose_tags(api_host['github']:format(pkg), install_version,
-                                install_where, download_zip_addr['gitee']:format(pkg))
-                    end
-                end
-
-            end)
-        end
+    if param.lan then
+        self._conf.language = param.lan
     end
+
+    -- before install
+    --print(pcall(function()
+    --    local before = require('oshine.om@:install.before')
+    --    if before then
+    --        before.run(work_dir, param.language)
+    --    end
+    --end))
+
+
+    self:_install_pkg(param)
 end
 
 return class_installer

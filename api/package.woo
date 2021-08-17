@@ -1,6 +1,8 @@
-local m = { http = require('om.api.promise'):new() }
+local m = { }
 
-function m:new()
+function m:new(conf)
+    print('=======',conf.v)
+    self.http = require('oshine/om@' .. conf.v .. ':api/promise'):new(conf)
     return self
 end
 

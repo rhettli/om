@@ -1,7 +1,36 @@
--- before install ,kill running program
+-- after install
 
 return {
-    run = function(...)
+    run = function(dir, lan)
+
+        print(({ zh = '检测环境变量。。。', en = 'check env...' })[lan])
+
+        -- 开始安装之后，把bin目录加入环境变量
+
+        local bin_path = dir .. '/bin'
+
+        -- 添加bin目录到环境变量
+
+        --C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files\Go\bin;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\dotnet\;C:\Program Files\Microsoft SQ
+        --L Server\130\Tools\Binn\;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Users\oshine\go\bin;C:\Users\oshine\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\oshine\AppData\Local\Microsoft\WindowsApps;C:\Users\oshine\
+        --.dotnet\tools;C:\Users\oshine\AppData\Roaming\npm;C:\bin;C:\Program Files\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
+
+        if _os() == 'windows' then
+            local path = _env('path')
+            if _str_index(path, bin_path) == -1 then
+                path = path .. ';' .. bin_path
+                _exec({ 'cmd', '/c', 'setx path "' .. path .. '"' })
+            end
+        else
+            local path = _cat(' ~/.bashrc', true)
+            if not _re_match(path, 'export .*?' .. bin_path)[1] then
+                _exec({ 'sh', '-c', 'echo export PATH=' .. '$PATH:' .. bin_path .. ' >> ~/.bashrc && source ~/.bashrc' })
+            end
+
+        end
+
+        print(({ zh = '完成', en = 'done' })[lan])
 
     end
 }
+

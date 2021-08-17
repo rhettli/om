@@ -1,0 +1,9 @@
+_ls('C:\\Users\\oshine/om/oshine/woo_any_type', function(i, v)
+    if v then
+        print('已经存在目录：', _json_encode(v))
+    end
+
+    _out(i,'\n')
+
+    print('fff')
+end)

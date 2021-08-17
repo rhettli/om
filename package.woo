@@ -1,23 +1,30 @@
 --author: liyanxi
 
 return {
-    -- oshine is member name ,om is package name
+    --- oshine is member name ,om is package name
     ['package_name'] = 'oshine/om',
-    -- where should this package install,[default:local]
+    --- where should this package install,[default:local]
+---
     self_install = 'global',
 
-    -- ['package_name'] = 'version'
-    -- version must like :? , 1.?, 2.3.?
+    --- ['package_name'] = 'version'
+    --- version must like :? , 1.?, 2.3.?
     dependencies = {
         ['oshine/woo_any_type'] = '?|global',
-        ['oshine/woo_args'] = '?|global'
+        ['oshine/woo_args'] = '1.0?|global'
     },
-    -- platform default is all platform
+    --- platform default is all platform
     platform = 'all' or 'windows drawn linux',
-    -- which port will take,mulit port use , split
+    --- which port will take,mulit port use , split
 
     --port = '12225,12224',
 
     remark = { zh = 'woo语言官方包管理器', en = 'install package in any platform at any time' },
     title = 'Coder Wooyri package manager',
+
+    --- 导出cmd文件夹内的woo文件用作全局命令
+    export = {},
+
+    --- 自动加入环境变量
+    env = { 'bin', OM_PATH = '' }
 }

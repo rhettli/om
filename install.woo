@@ -3,6 +3,8 @@
 -- https://gitee.com/oshine/om/raw/master/installer.woo
 -- https://gitee.com/oshine/om/raw/v1.0.11/installer.woo
 
+local T = true
+
 --local host = 'https://woo.wooyri.com/om?ver='
 local host = 'http://127.0.0.1:8008/s/om?ver='
 
@@ -23,7 +25,7 @@ if not params.lan then
     end
 end
 
-print(({ ['en'] = 'read to request server for om version', ['zh'] = '准备请求服务器可用的om版本' })[params.lan])
+print(({ ['en'] = 'ready to request server for om version', ['zh'] = '准备请求服务器可用的om版本' })[params.lan])
 
 local ver = _str_sub(_ver(), 0, 4)
 host = host .. ver
@@ -42,6 +44,12 @@ else
     print('can not access network')
     os.exit(-1)
 end
+if available.code ~= 0 then
+    print('unknown error')
+    return
+end
+
+--_out(available)
 
 print(({ ['en'] = 'there have the version[%s] valid',
          ['zh'] = '这里有版本[%s]可用' })[params.lan]:format(available.data.ver))
@@ -54,30 +62,34 @@ if not params.install_dir then
     end
 end
 
+-- 动态获取当前woo语言版本对应的最大可用om版本
+local om = '1.15'
+
 function downl()
-    local curr_env = _env('om_PATH')
-    print(({ ['en'] = 'current om_PATH：%s,you choose install dir:%s',
-             ['zh'] = '当前 om_PATH：%s,你选择的安装地址：%s' })[params.lan]:format(curr_env, params.install_dir))
-
-    if curr_env ~= params.install_dir then
-
-        if _os() == 'windows' then
-            -- 添加环境变量，判断windows和unix系统
-            _exec({ 'cmd', '/c', 'setx om_PATH ' .. params.install_dir })
-        else
-            _exec({ 'sh', '-c', 'echo export om_PATH=' .. params.install_dir .. ' >> ~/.bashrc && source ~/.bashrc' })
-        end
-        print(({ ['en'] = 'env variable not correct ,correct it now', ['zh'] = '环境变量不正确，已经修正' })[params.lan])
-    else
-
-        print(({ ['en'] = 'env variable ok ,skip it', ['zh'] = '环境变量配置正确，跳过' })[params.lan])
-    end
 
     local addr = available.data.addr
 
     if not addr then
         print(({ ['en'] = 'server response err', ['zh'] = '服务器返回不正确' })[params.lan])
         return
+    end
+
+    local curr_env = _env('OM_PATH')
+    print(({ ['en'] = 'current OM_PATH：%s,you choose install dir:%s',
+             ['zh'] = '当前 OM_PATH：%s,你选择的安装地址：%s' })[params.lan]:format(curr_env, params.install_dir))
+
+    if curr_env ~= params.install_dir then
+
+        if _os() == 'windows' then
+            -- 添加环境变量，判断windows和unix系统
+            _exec({ 'cmd', '/c', 'setx OM_PATH ' .. params.install_dir })
+        else
+            _exec({ 'sh', '-c', 'echo export OM_PATH=' .. params.install_dir .. ' >> ~/.bashrc && source ~/.bashrc' })
+        end
+        print(({ ['en'] = 'env variable not correct ,correct it now', ['zh'] = '环境变量不正确，已经修正' })[params.lan])
+    else
+
+        print(({ ['en'] = 'env variable ok ,skip it', ['zh'] = '环境变量配置正确，跳过' })[params.lan])
     end
 
     local addrs = _str_split(addr, '|')
@@ -131,8 +143,12 @@ end
 print(({ en = 'unzip success，install om dependencies package',
          zh = '解压成功，安装om依赖包' })[params.lan])
 
-package.path = params.install_dir .. '/?.woo'
+--local git='https://gitee.com/oshine/om'
 
-require('om/installer'):new(params.install_dir .. '/om'):install({ lan = params.lan })
+
+package.path = '@' .. params.install_dir .. '/?.woo'
+print(package.path)
+
+require('oshine/om@1.?:installer'):new(params.install_dir .. '/oshine/om/' .. om):install({ lan = params.lan }, true)
 
 print(({ ['en'] = 'success', ['zh'] = '成功' })[params.lan])

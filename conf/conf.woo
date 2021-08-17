@@ -1,10 +1,15 @@
 -- config model
 
-
+local p = _env('OM_PATH')
+if p == '' then
+    p = _home() .. '/om'
+end
 
 return {
 
-    install_dir = _env('om_PATH') or _home() .. '/om', -- cwm install dir / cwm 安装目录
+    install_dir = p, -- cwm install dir / cwm 安装目录
     language = 'zh', -- en [english] or zh [中文]
-    api_host = 'http://127.0.0.1:8008'
+    api_host = 'http://127.0.0.1:8008',
+    v = '1.?',
+    proxy = nil -- 如果不为空，则使用代理访问网络，支持sockets代理
 }
