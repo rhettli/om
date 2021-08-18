@@ -15,13 +15,16 @@ local class_installer = {
         github = 'https://api.github.com/repos/%s/tags'
     },
     _download_zip_addr = {
-        -- download from gitee.com
+        --- download from gitee.com
         gitee = 'https://gitee.com/%s/repository/archive/%s.zip',
-        -- download from github.com
+        --- download from github.com
         github = 'https://github.com/%s/archive/refs/%s.zip'
     },
+    --- 是否已经创建.bin目录
+    _is_bin_created = false
 }
 
+--- 初始化
 function class_installer:new (work_dir_)
     print('install new...', work_dir_)
     work_dir = work_dir_
@@ -65,16 +68,9 @@ function class_installer:new (work_dir_)
     assert(false, 'not support your os:' .. os)
 end
 
+--- 获取package.woo配置
 function class_installer:yml_conf  ()
     return self.yml
-end
-
-function class_installer:is_installed  ()
-
-end
-
-function class_installer:download  (source)
-
 end
 
 --- 下载tags版本
@@ -93,7 +89,7 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
 
     if not _file_exist(path_name) then
         local r = _wget(path_name .. '_temp', download_prefix, {
-            headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. ')' } })
+            headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. _time() .. ')' } })
         --if not r then
         --    print('download fail:', download_prefix, '=>', path_name)
         --    return
@@ -137,13 +133,13 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
     end
 
     self:_after_install(pkg, ver)
-    self:_env_path_add(pkg, ver)
+    self:_env_path_add(pkg, ver, p .. ver)
     self:_export_cmd(pkg, ver, p)
 
     -- 安装依赖包中的依赖包
     require('oshine/om@1.?:installer'):new(p .. ver):_install_pkg({ lan = self._conf.language }, self._curr_where)
 
-    --- 安装完毕，添加安装成功文件
+    -- 安装完毕，添加安装成功文件
     _file_save(p .. ver .. '/installed.woo', 'return "' .. _time() .. '"')
 
 end
@@ -165,31 +161,35 @@ function class_installer:_after_install(pkg, ver)
 end
 
 --- 把需要加入path的环境变量处理下
-function class_installer:_env_path_add(pkg, ver)
+function class_installer:_env_path_add(pkg, ver, real_path)
+    if self.yml.env_path then
+        print('env_path check:', _json_encode(self.yml.env_path))
+    end
+
+    --- 开始加入环境变量PATH
+    require('oshine/om@1.?:utils/env_path')(real_path)
 
 end
 
-class_installer.isBinCreated = false
-
 --- 全局导出cmd命令
 function class_installer:_export_cmd(pkg, ver, pkg_path)
-    print("before copy:===", work_dir, self._conf.install_dir .. '/' .. self.yml.package_name)
+    print("_export_cmd,before copy:===", work_dir, self._conf.install_dir .. '/' .. self.yml.package_name)
     --local r, e = _cp(work_dir, self._conf.install_dir .. '/' .. self.yml.package_name)
     --print("copy:===", r, e)
 
     -- rename=[cmd/]rename
     --_out('export:===', self.yml)
     if type(self.yml.export) == 'table' then
-        print('export ok:===', _json_encode(self.yml.export))
+        print('_export_cmd,export ok:===', _json_encode(self.yml.export))
         for i, v in pairs(self.yml.export) do
-            print('===export!:===', i, v)
-            if not self.isBinCreated then
+            print('===_export_cmd,export!:===', i, v)
+            if not self._is_bin_created then
                 if not _file_exist(pkg_path .. '/../.bin') then
                     _mkdir(pkg_path .. '/../.bin')
                 end
-                self.isBinCreated = true
+                self._is_bin_created = true
             end
-            print('export file:==', pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
+            print('_export_cmd,export file:==', pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
             _file_save(pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
         end
     end
@@ -198,16 +198,27 @@ function class_installer:_export_cmd(pkg, ver, pkg_path)
 
 end
 
+function class_installer:_error(err)
+    _color('pre', err, 'red')
+end
+
 --- 选择tags版本
 --- @param ver string @1.? or ?
 function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pkg)
     print('choose tags:===', tags_path, ver, where, download_prefix)
-    local r, e = woo.http:new():get(tags_path, {})
+    local r, e = woo.http:new():get(tags_path, {
+        headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. _time() .. ')' } })
     print(self._trs['installer_choose_tags'])
     local re_ver = _str_replace(ver, '?', '.*')
     if not e then
         local res = _json_decode(r.body)
         print('got tags list:===', _json_encode(res))
+        if (not res) then
+            local sour = _str_index(tags_path, '//gitee.com') ~= -1 and 'gitee.com' or 'github.com'
+            self:_error(({ en = 'err,your ip be limited by source:%s,msg:%s,now try another source', zh = '错误，您的ip远程获取tags列表被限制，来自源:%s,错误信息:%s，现在重试使用其他源' })[self._conf.language]:format(sour, r.body))
+            return false -- 返回false就是需要重新使用其他源来下载
+        end
+
         if #res == 0 then
             -- choose master branch
             -- https://gitee.com/oshine/murphy/repository/archive/master.zip
@@ -265,7 +276,7 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
 end
 
 --- 是否已经安装
-function class_installer:check_installed(p, install_version_re, install_version)
+function class_installer:_check_installed(p, install_version_re, install_version)
     local skip
     if _file_exist(p) then
         -- if installed,juuuuust skip
@@ -301,14 +312,14 @@ function class_installer:_install_pkg(param, where_parent)
             end
 
             if _str_index(install_version, '*') > -1 then
-                print('version can not contain symbol *,pkg ignored:', dep)
+                _color('pre', 'version can not contain symbol *,pkg ignored:' .. dep, 'red')
                 return
             end
 
             -- 没有定义安装位置，默认继承父包安装位置
             install_where = install_where or 'auto'
             if install_where == 'auto' then
-                install_where = where_parent
+                install_where = where_parent and where_parent or 'global'
             end
             install_version = install_version or '?'
         end
@@ -330,7 +341,7 @@ function class_installer:_install_pkg(param, where_parent)
             end)
 
         elseif install_where == 'global' then
-            skip = class_installer:check_installed(self._conf.install_dir .. '/' .. pkg, install_version_re, install_version)
+            skip = class_installer:_check_installed(self._conf.install_dir .. '/' .. pkg, install_version_re, install_version)
         else
             print('just global and local can be use')
             return
