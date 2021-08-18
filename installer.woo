@@ -4,6 +4,7 @@ local os = _os()
 local install_dir
 
 local class_installer = {
+    _curr_where = nil,
     _conf = nil,
     _yml = nil,
     _trs = nil,
@@ -76,61 +77,6 @@ function class_installer:download  (source)
 
 end
 
-function class_installer:install_plugs  ()
-    -- check package.yml
-
-    print('copy start...')
-    -- before install
-    print(pcall(function()
-        local before = require('install.before')
-        if before then
-            before.run()
-        end
-    end))
-
-    local r, e = _cp(work_dir, install_dir .. '/' .. self.yml.name)
-    print("copy:===", work_dir, install_dir .. '/' .. self.yml.name, r, e)
-    -- before install
-    pcall(function()
-        local after = require(self.yml.name .. '.install.after')
-        if after then
-            after.run()
-        end
-    end)
-    -- map cmd
-    local callback = function(file, is_dir)
-        print('file callback:===', file, is_dir)
-        if str_index(file, '.lua') == #file - #'.lua' then
-            if not is_dir then
-                local real_file = _str_split(str_replace(file, '\\', '/'), '/')
-                local name = _str_split(real_file[#real_file], '.')[1]
-                local origin_name = name
-                if os == 'windows' then
-                    -- windows mcd
-                    if str_index(file, 'windows') > -1 then
-                        name = 'windows.' .. name
-                    end
-                    -- cwm cmd oshine/bitmap check
-                    _file_save(install_dir .. '/bin/' .. origin_name .. '.cmd', '@echo off \n::Generate by cwm ,do not modify this file \n' ..
-                            'cwm cmd ' .. self.yml.name .. ' ' .. name)
-                elseif os == 'linux' or os == 'darwin' then
-                    -- linux and mac cmd
-                    if _str_index(file, 'linux') > -1 then
-                        name = 'linux.' .. name
-                    elseif _str_index(file, 'darwin') > -1 then
-                        name = 'darwin.' .. name
-                    end
-                    _file_save(install_dir .. '/bin/' .. origin_name .. '.sh', '#Generate by cwm ,do not modify this file \n' ..
-                            'cwm cmd ' .. self.yml.name .. ' ' .. name)
-                end
-            end
-        end
-    end
-
-    _ls(install_dir .. '/' .. self.yml.name .. '/cmd/', callback)
-
-end
-
 --- 下载tags版本
 --- @param ver string @1.? or ?
 function class_installer:_download_tags(branch_name, ver, where, pkg, download_prefix)
@@ -167,7 +113,7 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
         f = branch_name
     end
     ver = _ltrim(ver, 'v')
-
+    local p
     if where == 'local' then
         -- 本地安装
         local unzip_res = _zip('unzip', path_name, './vendor/' .. pkg)
@@ -175,7 +121,8 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
             print(self._trs['unzip_fail']:format(path_name, unzip_res))
             return
         end
-        _mv('./vendor/' .. pkg .. username, './vendor/' .. pkg .. f)
+        p = './vendor/' .. pkg
+        _mv(p .. user_package_name .. '-' .. f, p .. ver)
     else
         -- 全局安装
         local unzip_res = _zip('unzip', path_name, self._conf.install_dir .. '/' .. pkg)
@@ -183,24 +130,36 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
             print(self._trs['unzip_fail']:format(path_name, unzip_res))
             return
         end
-        local p = self._conf.install_dir .. '/' .. pkg .. '/'
+
+        p = self._conf.install_dir .. '/' .. pkg .. '/'
         --print('change:===', p .. user_package_name .. '-' .. ver, p .. f)
         _mv(p .. user_package_name .. '-' .. f, p .. ver)
     end
 
     self:_after_install(pkg, ver)
     self:_env_path_add(pkg, ver)
-    self:_export_cmd(pkg, ver)
+    self:_export_cmd(pkg, ver, p)
+
+    -- 安装依赖包中的依赖包
+    require('oshine/om@1.?:installer'):new(p .. ver):_install_pkg({ lan = self._conf.language }, self._curr_where)
+
+    --- 安装完毕，添加安装成功文件
+    _file_save(p .. ver .. '/installed.woo', 'return "' .. _time() .. '"')
+
 end
 
 --- 安装成功之后调用
 function class_installer:_after_install(pkg, ver)
     local v = ver
     ver = ver == 'master' and '' or (ver .. '?')
-    local after = pcall(function()
+    print('after install:==', pkg, ver)
+    local s, after = pcall(function()
+        print('pkg:===', pkg .. '@' .. ver .. ':install/after')
         return require(pkg .. '@' .. ver .. ':install/after')
     end)
-    if after then
+    --_out('after:===', after,s, '===')
+
+    if after and type(after) == 'table' then
         after.run(pkg, v, self._conf)
     end
 end
@@ -210,8 +169,32 @@ function class_installer:_env_path_add(pkg, ver)
 
 end
 
+class_installer.isBinCreated = false
+
 --- 全局导出cmd命令
-function class_installer:_export_cmd(pkg, ver)
+function class_installer:_export_cmd(pkg, ver, pkg_path)
+    print("before copy:===", work_dir, self._conf.install_dir .. '/' .. self.yml.package_name)
+    --local r, e = _cp(work_dir, self._conf.install_dir .. '/' .. self.yml.package_name)
+    --print("copy:===", r, e)
+
+    -- rename=[cmd/]rename
+    --_out('export:===', self.yml)
+    if type(self.yml.export) == 'table' then
+        print('export ok:===', _json_encode(self.yml.export))
+        for i, v in pairs(self.yml.export) do
+            print('===export!:===', i, v)
+            if not self.isBinCreated then
+                if not _file_exist(pkg_path .. '/../.bin') then
+                    _mkdir(pkg_path .. '/../.bin')
+                end
+                self.isBinCreated = true
+            end
+            print('export file:==', pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
+            _file_save(pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
+        end
+    end
+
+    --_ls(install_dir .. '/' .. self.yml.name .. '/cmd/', callback)
 
 end
 
@@ -238,8 +221,11 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
 
             self:_download_tags('master', '@', where, pkg, download_prefix)
         else
+            local v
             -- choose a match tags branch
-            for _, v in pairs(res) do
+            -- gitee是倒着取版本
+            for i = #res, 0, -1 do
+                v = res[i]
                 local name
                 if 1 < _str_count(v.name, '.') then
                     print('version named illegal,can only have one point symbol:' .. v.name, 'eg:v1.0123  v1.34001  v2.301')
@@ -273,16 +259,37 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
 
             end
         end
-
     else
         print('get tags list error:', e)
     end
 end
 
+--- 是否已经安装
+function class_installer:check_installed(p, install_version_re, install_version)
+    local skip
+    if _file_exist(p) then
+        -- if installed,juuuuust skip
+        _ls(p, function(v)
+            print('目录：', p, _json_encode(v))
+            print('install ver:===', install_version_re, install_version)
+            local re_res = _re_match(v.name, install_version_re)
+            print('install ver:===', _json_encode(re_res))
+            if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
+                skip = true
+                return true
+            end
+        end, true)
+    end
+
+    print('check ins:==', skip)
+
+    return skip
+end
+
 --- 安装依赖包根据 package.woo
-function class_installer:_install_pkg(param, is_self)
+function class_installer:_install_pkg(param, where_parent)
     for pkg, dep in pairs(self.yml.dependencies) do
-        local install_where, install_version
+        local install_version, install_where
         if _str_index(dep, '|') > -1 then
             local sp = _str_split(dep, "|")
             if #sp == 2 then
@@ -292,7 +299,17 @@ function class_installer:_install_pkg(param, is_self)
                 print(self._trs['install_where_nil']:format(dep))
                 install_version = sp[1]
             end
-            install_where = install_where or 'local'
+
+            if _str_index(install_version, '*') > -1 then
+                print('version can not contain symbol *,pkg ignored:', dep)
+                return
+            end
+
+            -- 没有定义安装位置，默认继承父包安装位置
+            install_where = install_where or 'auto'
+            if install_where == 'auto' then
+                install_where = where_parent
+            end
             install_version = install_version or '?'
         end
 
@@ -313,23 +330,15 @@ function class_installer:_install_pkg(param, is_self)
             end)
 
         elseif install_where == 'global' then
-
-            if _file_exist(self._conf.install_dir .. '/' .. pkg) then
-                -- if installed,juuuuust skip
-                _ls(self._conf.install_dir .. '/' .. pkg, function(v)
-                    print('已经存在目录：', self._conf.install_dir .. '/' .. pkg, _json_encode(v))
-                    local re_res = _re_match(v.name, install_version_re)
-                    if #re_res[1] > 0 and v.name == re_res[1][1] or (v.name == '@' and install_version == '?') then
-                        skip = true
-                        return true
-                    end
-                end, true)
-            end
+            skip = class_installer:check_installed(self._conf.install_dir .. '/' .. pkg, install_version_re, install_version)
         else
             print('just global and local can be use')
             return
         end
 
+        self._curr_where = install_where
+
+        print('must install:===', install_where, where_parent)
         if not skip then
             print(self._trs['installer_install_dependencies']:format(install_where, install_version))
             print('start search pkg:', pkg)
