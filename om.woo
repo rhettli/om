@@ -69,7 +69,7 @@ capture:catch('login', function(login_c)
 end)   :catch('logout', function()
     print('logout ...')
     require('oshine.om@:api.member'):new():logout()
-end)   :catch('install', function(c)
+end)   :catch({ 'i', 'install' }, function(c)
     c:catch('plugs', function()
         -- install self , just copy self folder to om package folder make sure you can load the lib anywhere
         -- install dir is [~/username/om/]
@@ -150,4 +150,16 @@ end)   :catch('config', function(package_c, is_show_help)
     end
 end)   :catch('search', function()
     -- search article ,share hook...
+end)   :catch({ 'u', 'update' }, function(c)
+    local up_status = c:catchNext()
+    --om install rename
+    --om update -- 更新所有，有缓存使用缓存更新
+    --om update force -- 更新所有，强制升级
+    --om update rename force -- 更新rename，强制升级
+    --om update rename v: 1.2? -- 更新rename，强制升级
+    if up_status == 'f:' then
+        -- 强制升级，不使用缓存
+
+    end
+
 end)   :run()

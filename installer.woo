@@ -148,6 +148,9 @@ end
 function class_installer:_after_install(pkg, ver)
     local v = ver
     ver = ver == 'master' and '' or (ver .. '?')
+    if ver == '@?' then
+        ver = ''
+    end
     print('after install:==', pkg, ver)
     local s, after = pcall(function()
         print('pkg:===', pkg .. '@' .. ver .. ':install/after')
@@ -166,6 +169,7 @@ function class_installer:_env_path_add(pkg, ver, real_path)
         print('env_path check:', _json_encode(self.yml.env_path))
     end
 
+    print('添加环境变量:', real_path)
     --- 开始加入环境变量PATH
     require('oshine/om@1.?:utils/env_path')(real_path)
 
@@ -192,6 +196,9 @@ function class_installer:_export_cmd(pkg, ver, pkg_path)
             print('_export_cmd,export file:==', pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
             _file_save(pkg_path .. '/../.bin/' .. i, work_dir .. '/cmd/' .. v .. '.woo')
         end
+
+    else
+        print('导出，忽略:', self.yml.package_name)
     end
 
     --_ls(install_dir .. '/' .. self.yml.name .. '/cmd/', callback)
@@ -206,9 +213,31 @@ end
 --- @param ver string @1.? or ?
 function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pkg)
     print('choose tags:===', tags_path, ver, where, download_prefix)
-    local r, e = woo.http:new():get(tags_path, {
-        headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. _time() .. ')' } })
+
+    local pkg_name = _str_replace(pkg, '/', '.')
+
+    local tags_name_cache = self._conf.install_dir .. '/.download/' .. pkg_name
+
+    local r, e
+    if _file_exist(tags_name_cache) then
+        r = { isCache = true, body = _cat(tags_name_cache, true) }
+        local time = _sub_ex('n', r.body, ' ')
+        print('time:===', time)
+        if _is_valid(time) and 1 * time + 60 * 60 * 3 > _time() then
+            -- 有效期3小时
+            print('缓存有效，tags列表，使用缓存:', tags_name_cache)
+            r.body = _sub_ex('re', r.body, ' ')
+        end
+    end
+
+    if (r and not _is_valid(r.body)) or not r then
+        -- 获取tags列表之前，先看看本地缓存，本地缓存有效期3小时
+        r, e = woo.http:new():get(tags_path, {
+            headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. _time() .. ')' } })
+    end
+
     print(self._trs['installer_choose_tags'])
+
     local re_ver = _str_replace(ver, '?', '.*')
     if not e then
         local res = _json_decode(r.body)
@@ -217,6 +246,19 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
             local sour = _str_index(tags_path, '//gitee.com') ~= -1 and 'gitee.com' or 'github.com'
             self:_error(({ en = 'err,your ip be limited by source:%s,msg:%s,now try another source', zh = '错误，您的ip远程获取tags列表被限制，来自源:%s,错误信息:%s，现在重试使用其他源' })[self._conf.language]:format(sour, r.body))
             return false -- 返回false就是需要重新使用其他源来下载
+        end
+
+        -- 不是缓存，那么就保存
+        if not r.isCache then
+            if ver == '?' then
+                tags_name_cache = tags_name_cache .. '_' .. res.commit.sha
+            end
+            -- 获取到列表，先更新下本地缓存
+            local r_tags = _file_save(tags_name_cache, _time() .. ' ' .. r.body)
+            if not r_tags then
+                self:_error('缓存写入失败：', tags_name_cache)
+                return
+            end
         end
 
         if #res == 0 then
@@ -312,7 +354,7 @@ function class_installer:_install_pkg(param, where_parent)
             end
 
             if _str_index(install_version, '*') > -1 then
-                _color('pre', 'version can not contain symbol *,pkg ignored:' .. dep, 'red')
+                _color('pre', 'version can not contain symbol *,pkg ignored:' .. pkg .. ',' .. dep, 'red')
                 return
             end
 
