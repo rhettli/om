@@ -11,7 +11,7 @@ return {
         -- 添加bin目录到环境变量
         require('oshine/om@1.?:utils/env_path')(bin_path)
 
-        print(({ zh = '完成', en = 'done' })[lan])
+        print('finish:======', ({ zh = '完成', en = 'done' })[lan])
 
     end
 }

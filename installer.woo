@@ -1,9 +1,14 @@
+---@author liyaxi
+---@language woo
+--- 当时写这个版本管理，这的 很那个啥。。。 不想写。。。。
+
 local dir = _DIR
 local work_dir = ''
 local os = _os()
 local install_dir
 
 local class_installer = {
+    _ver = '',
     _curr_where = nil,
     _conf = nil,
     _yml = nil,
@@ -130,17 +135,11 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
         p = self._conf.install_dir .. '/' .. pkg .. '/'
         --print('change:===', p .. user_package_name .. '-' .. ver, p .. f)
         _mv(p .. user_package_name .. '-' .. f, p .. ver)
-    end
 
-    self:_after_install(pkg, ver)
-    self:_env_path_add(pkg, ver, p .. ver)
-    self:_export_cmd(pkg, ver, p)
+    end
 
     -- 安装依赖包中的依赖包
     require('oshine/om@1.?:installer'):new(p .. ver):_install_pkg({ lan = self._conf.language }, self._curr_where)
-
-    -- 安装完毕，添加安装成功文件
-    _file_save(p .. ver .. '/installed.woo', 'return "' .. _time() .. '"')
 
 end
 
@@ -167,11 +166,13 @@ end
 function class_installer:_env_path_add(pkg, ver, real_path)
     if self.yml.env_path then
         print('env_path check:', _json_encode(self.yml.env_path))
-    end
 
-    print('添加环境变量:', real_path)
-    --- 开始加入环境变量PATH
-    require('oshine/om@1.?:utils/env_path')(real_path)
+        print('添加环境变量:', real_path)
+        --- 开始加入环境变量PATH
+        require('oshine/om@1.?:utils/env_path')(real_path)
+    else
+        print('evn 忽略:', pkg, ver, real_path)
+    end
 
 end
 
@@ -201,8 +202,6 @@ function class_installer:_export_cmd(pkg, ver, pkg_path)
         print('导出，忽略:', self.yml.package_name)
     end
 
-    --_ls(install_dir .. '/' .. self.yml.name .. '/cmd/', callback)
-
 end
 
 function class_installer:_error(err)
@@ -227,19 +226,22 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
             -- 有效期3小时
             print('缓存有效，tags列表，使用缓存:', tags_name_cache)
             r.body = _sub_ex('re', r.body, ' ')
+        else
+            r = nil
         end
     end
 
     if (r and not _is_valid(r.body)) or not r then
         -- 获取tags列表之前，先看看本地缓存，本地缓存有效期3小时
         r, e = woo.http:new():get(tags_path, {
-            headers = { ['User-Agent'] = 'curl/7.74.0 (' .. _os(true) .. '/woo-' .. _ver() .. _time() .. ')' } })
+            headers = { ['User-Agent'] = ('curl/7.74.0 (%s/woo-%s/%s)'):format(_os(true), _ver(), _time()) } })
     end
 
     print(self._trs['installer_choose_tags'])
 
     local re_ver = _str_replace(ver, '?', '.*')
     if not e then
+        print('取到tags list:===', r.body, e)
         local res = _json_decode(r.body)
         print('got tags list:===', _json_encode(res))
         if (not res) then
@@ -251,7 +253,7 @@ function class_installer:_choose_tags(tags_path, ver, where, download_prefix, pk
         -- 不是缓存，那么就保存
         if not r.isCache then
             if ver == '?' then
-                tags_name_cache = tags_name_cache .. '_' .. res.commit.sha
+                tags_name_cache = tags_name_cache -- .. '_' .. res.commit.sha
             end
             -- 获取到列表，先更新下本地缓存
             local r_tags = _file_save(tags_name_cache, _time() .. ' ' .. r.body)
@@ -444,12 +446,26 @@ function class_installer:_install_pkg(param, where_parent)
             end)
         end
     end
+
+    -- 所有插件安装之后，执行after install
+    self:_after_install(self.yml.package_name, self._ver)
+    local pkg = self.yml.package_name
+    local ver = self._ver
+    local p = work_dir .. ver
+
+    print('p:===================', pkg, ver, p, ver)
+    --self:_env_path_add(pkg, ver, p .. ver)
+    --self:_export_cmd(pkg, ver, p)
+    ---- 安装完毕，添加安装成功文件
+    --_file_save(p .. ver .. '/installed.woo', 'return "' .. _time() .. '"')
+
 end
 
 --- 安装自己，或者某个包
 ---@param param table
 ---@param is_self boolean@是否是安装自己
-function class_installer:install(param, is_self)
+---@param ver string@om的版本好，比如:1.15
+function class_installer:install(param, is_self, ver)
     local cwm_path = self._conf.install_dir
     if not cwm_path then
         print(self._trs['om_path_nil'])
@@ -468,6 +484,7 @@ function class_installer:install(param, is_self)
     --    end
     --end))
 
+    self._ver = ver
 
     self:_install_pkg(param)
 end

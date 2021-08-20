@@ -7,9 +7,20 @@ return function(bin_path)
 
     if _os() == 'windows' then
         local path = _env('path')
+        path = _rtrim(path, '\r ')
+        print('加入环境变量：', path, '=>', bin_path)
         if _str_index(path, bin_path) == -1 then
-            path = path .. ';' .. bin_path
-            _exec({ 'cmd', '/c', 'setx path "' .. path .. '"' })
+            print(';:=====', _end_with(path, ';'),
+                    _str_sub(path, #path - 1))
+
+            if ';' == _str_sub(path, #path - 1) then
+                path = (path .. bin_path)
+            else
+                print('with ; ok:=====')
+                path = (path .. ';' .. bin_path)
+            end
+
+            print(_exec({ 'setx','path', path }, true))
             return true
         end
         return nil
