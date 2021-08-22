@@ -1,13 +1,19 @@
 --author: liyanxi
 
 return {
+    --- woo版本
+    woo_ver = '1.0?',
+
+    --- om 版本
+    ver = '1.15',
+
     --- oshine is member name ,om is package name
     ['package_name'] = 'oshine/om',
+
+
     --- where should this package install,[default:local]
-    ---
     self_install = 'global',
 
-    --- ['package_name'] = 'version'
     --- version must like :? , 1.?, 2.3.?
     dependencies = {
         ['oshine/woo_any_type'] = '?|global',

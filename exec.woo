@@ -1,10 +1,10 @@
+local s = 'systemName,caption, SerialNumber , SystemCreationClassName  ,SystemName, Description  ,DeviceID'
 
-package.path=package.path..';'..'C:\\Users\\admin\\Desktop\\cw_device/?.lua;'
-
-local s = ' systemName,caption, SerialNumber , SystemCreationClassName  ,SystemName, Description  ,DeviceID'
-
-local r = exec({ 'wmic', ' volume ', ' get ', 'DeviceID ', ',SerialNumber', ',caption' })
+--local r = _exec({'cmd','/c', 'wmic', 'volume', 'get', 'DeviceID'}, true)
+local r = _exec({ 'cmd', '/c', 'dir' }, false)
 print(r)
+
+--print(os.execute( 'cmd', '/c', 'dir'))
 
 
 --6e530bb5-0a12-4110-8781-7eefcaeac0e7}\  1550108606

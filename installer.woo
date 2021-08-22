@@ -141,6 +141,9 @@ function class_installer:_download_tags(branch_name, ver, where, pkg, download_p
     -- 安装依赖包中的依赖包
     require('oshine/om@1.?:installer'):new(p .. ver):_install_pkg({ lan = self._conf.language }, self._curr_where)
 
+    --- 当某个包安装完毕后，需要把它的绝对地址写入path.woo
+    _file_save(p .. ver .. '/path.woo', 'return "' .. p .. ver .. '"')
+
 end
 
 --- 安装成功之后调用

@@ -52,13 +52,13 @@ end
 
 print('om get real args:===', _json_encode(args1))
 
-if _in_array(args1[1], { 'install', '-i', 'i' }) then
+if _in_array(args1[1], { 'install', 'i' }) then
     require('oshine.om@:installer'):new(args1[2] or _pwd()):install()
     return
 end
 
-local any_type = require('oshine.cw_any_type@:anyType'):new(args1)
-local capture = require('oshine.cw_args@:capture'):new(any_type:sliceToRight(1))
+local any_type = require('oshine.woo_any_type@:anyType'):new(args1)
+local capture = require('oshine.woo_args@:capture'):new(any_type:sliceToRight(1))
 any_type = nil
 
 capture:catch('login', function(login_c)
