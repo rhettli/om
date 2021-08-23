@@ -2,26 +2,27 @@
 
 return {
     --- woo版本
-    woo_ver = '1.0?',
+    --woo_ver = '1.0?',
 
     --- om 版本
     ---
     --- 设计规则，所有的版本添加功能，版本号只能小数点后面增加，整数位不增加，只有非常大的版本，不兼容之前的版本时，整数位才能增加
     ---
     --- 版本更新时，不能删除某个功能，防止不兼容，应当采用v1,v2来过度
-    ver = '1.15',
+    ---
+    --- 这个版本必须在tag个存在
+    ver = '1.01',
 
-    --- oshine is member name ,om is package name
-    ['package_name'] = 'oshine/om',
-
+    --- package name
+    ['package_name'] = '***/***',
 
     --- where should this package install,[default:local]
-    self_install = 'global',
+    self_install = 'global' or 'local' or 'download',
 
     --- version must like :? , 1.?, 2.3.?
     dependencies = {
-        ['oshine/woo_any_type'] = '?|global',
-        ['oshine/woo_args'] = '1.0?|global'
+        --['oshine/woo_any_type'] = '?|global',
+        --['oshine/woo_args'] = '1.0?|global'
     },
     --- platform default is all platform
     platform = 'all' or 'windows drawn linux',
@@ -29,6 +30,7 @@ return {
 
     --port = '12225,12224',
 
+    --remark =  'woo语言官方包管理器'
     remark = { zh = 'woo语言官方包管理器', en = 'install package in any platform at any time' },
     title = 'Coder Wooyri package manager',
 
@@ -37,5 +39,9 @@ return {
     --export = { rename = 'rename' },
 
     --- 自动加入环境变量
-    env_path = { 'bin' }
+    --env_path = { 'bin' }
+
+    --- 是否为mini程序
+    is_mini_program = false,
+
 }

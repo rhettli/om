@@ -13,6 +13,8 @@
 --print(_DIR)
 --print('pwd:==', pwd())
 
+
+
 local table = table
 
 install_dir = _env('OM_PATH') or _home() .. '/om'
@@ -53,7 +55,7 @@ end
 print('om get real args:===', _json_encode(args1))
 
 if _in_array(args1[1], { 'install', 'i' }) then
-    require('oshine.om@:installer'):new(args1[2] or _pwd()):install()
+    require('oshine.om@1.?:installer'):new(args1[2] or _pwd()):install()
     return
 end
 
@@ -63,12 +65,12 @@ any_type = nil
 
 capture:catch('login', function(login_c)
     print('login ready>>>')
-    local member = require('oshine.om@:api.member'):new()
+    local member = require('oshine.om@1.?:api.member'):new()
     local email = login_c:catchNext()
     member:login(email)
 end)   :catch('logout', function()
     print('logout ...')
-    require('oshine.om@:api.member'):new():logout()
+    require('oshine.om@1.?:api.member'):new():logout()
 end)   :catch({ 'i', 'install' }, function(c)
     c:catch('plugs', function()
         -- install self , just copy self folder to om package folder make sure you can load the lib anywhere
@@ -80,10 +82,14 @@ end)   :catch('send', function(c, is_show_help)
         return [[om send his]]
     end
 
+    -- om send oshine ./pac.zip [bg:]
+
     -- 发送文件给好友
     c   :catch('user', function(user_c)
-        local user = user_c:catchNext() --or user_c:catchArg({ '-u', '--user' })
-        local file = user_c:catchNextAll() --or user_c:catchArg({ '-f', '--file' })
+        local user = user_c:catchNext() --or user_c:catchArg({ 'u:', '--user' })
+        local files = user_c:catchNextAll() --or user_c:catchArg({ 'f:', '--file' })
+        require('oshine.om@1.?:cloud'):new():send(user, files)
+
     end):catch({ 'his', 'history' }, function()
     end):catch({ 'list', 'ls' }, function()
     end):catch({ 'que', 'queue' }, function()
@@ -111,9 +117,9 @@ end)   :catch('package', function(package_c, is_show_help)
     end
 
     local action = package_c:catchNext()
-    if action == 'local' then
+    if action == 'search:l' or action == 'search' then
         -- exec local cmd line
-        local pac = require('oshine.om@:local_parse.package'):new()
+        local pac = require('oshine.om@1.?:local_parse.package'):new()
         action = package_c:catchNext()
         if action == 'search' then
             pac:search()
@@ -123,33 +129,39 @@ end)   :catch('package', function(package_c, is_show_help)
         return
     end
 
-    local pac = require('oshine.om@:api.package'):new()
-    if action == 'add' then
+    local pac = require('oshine.om@1.?:api.package'):new()
+    if action == 'push' then
         local package_name = package_c:catchNext()
         local git_source = package_c:catchNext()
         pac:add(package_name, git_source)
-    elseif action == 'search' then
+    elseif action == 'search:g' then
         local key = package_c:catchNext()
         pac:search(key)
+    elseif action == 'new' then
+        -- 在当前目录新建一个package，如果存在package.woo文件，那么退出
+
     elseif action == 'list' then
         pac:status()
     end
-end)   :catch('demo', function()
-    -- om demo oshine/bitmap           // show all demo about oshine/bitmap
-    -- om demo oshine/bitmap circle    // run circle demo
+end)   :catch('test', function()
+    -- om test oshine/bitmap [main]    // show all demo about oshine/bitmap
+    -- om test oshine/bitmap circle    // run circle demo
+    -- om test oshine/bitmap list:    // run circle demo
 
 end)   :catch('config', function(package_c, is_show_help)
     local key = package_c:catchNext()
     local val = package_c:catchNext()
     if key and val then
-        require('oshine.om@:utils.utils').configSet(key, val, function()
+        require('oshine.om@1.?:utils.utils').configSet(key, val, function()
             conf = require('oshine.om@:conf.conf')
         end)
     elseif is_show_help then
 
     end
 end)   :catch('search', function()
-    -- search article ,share hook...
+    -- search a:article ,share hook...
+    -- search f:php ,share hook...
+
 end)   :catch({ 'u', 'update' }, function(c)
     local up_status = c:catchNext()
     --om install rename
