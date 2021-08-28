@@ -70,15 +70,15 @@ return {
 #### 2.提交git包到服务器，供他人搜索安装
 
 ```
-# 命令格式cwm package add 包名称 git资源，多个git资源请用逗号分隔,例如：
-cwm package add oshine/cw_cwm github.com/rhettli/cwm,gitee.com/oshine/cwm
+# 命令格式om package add 包名称 git资源，多个git资源请用逗号分隔,例如：
+om package sync
 ```
 #### 3.搜索他人他提交的安装包
 
 ```
-# 命令格式cwm package search 包名称[包名称中有/符号，那么/符号前面的是用户名],例如：
-cwm package search oshine/cw_cwm
-cwm package search cw_cwm
+# 命令格式om package search 包名称[包名称中有/符号，那么/符号前面的是用户名],例如：
+om package search oshine/mysql
+om package search mysql
 ```
 
 
